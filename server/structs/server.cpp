@@ -81,6 +81,10 @@ void Server::ClientTalker::Start() {
   DoRead();
 }
 
+bool Server::ClientTalker::IsStarted() const {
+  return started_;
+}
+
 Server::ClientPtr
 Server::ClientTalker::NewClient(boost::shared_ptr<Server> server) {
   ClientPtr ptr(new ClientTalker(server));

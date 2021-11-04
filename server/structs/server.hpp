@@ -19,7 +19,6 @@ public:
   class ClientTalker;
 
   typedef boost::shared_ptr<ClientTalker> ClientPtr;
-  typedef std::vector<ClientPtr> ClientsArray;
   typedef boost::system::error_code ErrorCode;
   typedef boost::asio::ip::tcp::acceptor Acceptor;
   typedef boost::asio::ip::tcp::socket Socket;
@@ -43,13 +42,12 @@ public:
   class ClientTalker : public boost::enable_shared_from_this<ClientTalker>,
                        boost::asio::noncopyable {
   public:
-
     ClientTalker(boost::shared_ptr<Server> server);
 
     static ClientPtr NewClient(boost::shared_ptr<Server> server);
     void Start();
     void Stop();
-    bool Started() const;
+    bool IsStarted() const;
 
     Socket &GetSocket();
 
@@ -58,8 +56,6 @@ public:
     response::Response LogIn(const std::string&);
 
     std::string GetSessionUuid() const;
-
-    void RemoveClient();
 
     int DoWriteToAllOtherClients(const std::string&);
     void DoWriteAllUnreadedMesseges();
@@ -72,11 +68,6 @@ public:
                                  const std::string& password);
 
     void DoWrite(std::string message);
-
-    bool operator==(const ClientTalker&);
-    bool operator==(ClientTalker&&);
-    bool operator!=(const ClientTalker&);
-    bool operator!=(ClientTalker&&);
 
   private:
     boost::shared_ptr<Server> my_server_;
@@ -94,17 +85,12 @@ public:
     void ParseMessage(std::string message);
 
     void OnWrite(const ErrorCode &error, size_t bytes_count);
-
-    void OnPing();
-    void OnWinnerRequest(Json data); 
-    void OnHello(std::string name);
   };
 
 private:
   boost::asio::io_service service_;
   Acceptor acceptor_;
-//  ClientsArray clients_;
-  std::vector<boost::shared_ptr<ClientTalker>> clients_;
+  std::vector<ClientPtr> clients_;
   storages::UsersTable user_table_;
   storages::MessageTable message_table_;
 
