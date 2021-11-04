@@ -14,7 +14,6 @@ using namespace boost::asio;
 namespace server {
 
 namespace {
-static int message_id = 0;
 using Json = nlohmann::json;
 } // namespace
 
