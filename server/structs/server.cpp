@@ -13,6 +13,10 @@ using namespace boost::asio;
 
 namespace server {
 
+namespace {
+using namespace lib_basics;
+} // namespace
+
 Server::Server(size_t port)
     : service_(), acceptor_(service_, ip::tcp::endpoint(ip::tcp::v4(), port)),
       clients_() {
@@ -34,7 +38,7 @@ Server::InsertUser(const std::string &login, const std::string &password) {
 }
 
 response::Response Server::IsPasswordCorrect(const std::string &login,
-                                             const std::string &password) const {
+                                             const std::string &password) {
   return user_table_.IsPasswordCorrect(login, password);
 }
 
@@ -71,6 +75,7 @@ std::string Server::ClientTalker::GetSessionUuid() const {
 }
 
 void Server::ClientTalker::Start() {
+  std::cout << "Client added" << std::endl;
   started_ = true;
   my_server_->AddClient(shared_from_this());
   DoRead();
@@ -116,7 +121,7 @@ void Server::ClientTalker::OnRead(const ErrorCode &error, size_t bytes_count) {
   }
 
   std::string message(read_buffer_, bytes_count);
-  ParseMessage(std::move(message));
+  ParseMessage(message);
 }
 
 void Server::ClientTalker::Stop() {
@@ -125,37 +130,41 @@ void Server::ClientTalker::Stop() {
   }
   started_ = false;
   socket_.close();
-
+  std::cout << "Client stoped" << std::endl;
   my_server_->RemoveClient(shared_from_this());
 }
 
-void Server::ClientTalker::ParseMessage(std::string message) {
+void Server::ClientTalker::ParseMessage(const std::string &message) {
   std::cout << "Got message : " << message << std::endl;
   Json input = Json::parse(message);
-  auto response = replies::ManageMessage(input, *this);
-  if (response.status == response::kBadRequest) {
-    DoWrite(Json{{"status", response.AsString()}}.dump() + "\n");
-  }
+  replies::ManageMessage(input, *this); // return Response
 }
 
 void Server::ClientTalker::DoWrite(std::string message) {
   if (!started_) {
     return;
   }
+  mutex_.lock();
   std::cout << "send message : " << message << std::endl;
   std::copy(message.begin(), message.end(), write_buffer_);
   socket_.async_write_some(buffer(write_buffer_),
                            boost::bind(&Server::ClientTalker::OnWrite,
                                        shared_from_this(), _1, _2));
+  mutex_.unlock();
 }
 
 std::string Server::ClientTalker::GetUsername() const {
   return login_;
 }
 
-response::Response Server::ClientTalker::LogIn(const std::string &login) {
+response::Response Server::ClientTalker::LogIn(const std::string &login,
+                                               const std::string &password) {
   if (!login_.empty()) {
-    return {response::kStateMismatch};
+    return {response::kBadRequest};
+  }
+  auto response = IsPasswordCorrect(login, password);
+  if (response.status != response::kOk) {
+    return response;
   }
   login_ = login;
   return {response::kOk};
@@ -172,7 +181,7 @@ response::Response Server::ClientTalker::InsertUser(const std::string &login,
 
 response::Response
 Server::ClientTalker::IsPasswordCorrect(const std::string &login,
-                                        const std::string &password) const {
+                                        const std::string &password) {
   return my_server_->IsPasswordCorrect(login, password);
 }
 
@@ -211,6 +220,10 @@ int Server::ClientTalker::DoWriteToAllOtherClients(const std::string &message) {
     my_server_->message_table_.InsertReciever(id, login.first);
   }
   return id;
+}
+
+bool Server::ClientTalker::isAuthorizated() const {
+  return !login_.empty();
 }
 
 } // namespace server

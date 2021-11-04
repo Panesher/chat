@@ -37,13 +37,13 @@ public:
 
   void RemoveClient(ClientPtr client);
 
-  response::Response
+  lib_basics::response::Response
   InsertUser(const std::string &login, const std::string &password);
 
-  response::Response IsPasswordCorrect(const std::string &login,
-                                       const std::string &password) const;
+  lib_basics::response::Response
+  IsPasswordCorrect(const std::string &login, const std::string &password);
 
-  response::Response
+  lib_basics::response::Response
   EraseUser(const std::string &login, const std::string &password);
 
   class ClientTalker
@@ -64,7 +64,8 @@ public:
 
     std::string GetUsername() const;
 
-    response::Response LogIn(const std::string &);
+    lib_basics::response::Response
+    LogIn(const std::string &, const std::string &);
 
     std::string GetSessionUuid() const;
 
@@ -72,16 +73,18 @@ public:
 
     void DoWriteAllUnreadedMesseges();
 
-    response::Response
+    lib_basics::response::Response
     InsertUser(const std::string &login, const std::string &password);
 
-    response::Response IsPasswordCorrect(const std::string &login,
-                                         const std::string &password) const;
+    lib_basics::response::Response
+    IsPasswordCorrect(const std::string &login, const std::string &password);
 
-    response::Response
+    lib_basics::response::Response
     EraseUser(const std::string &login, const std::string &password);
 
     void DoWrite(std::string message);
+
+    bool isAuthorizated() const;
 
   private:
     boost::shared_ptr<Server> my_server_;
@@ -91,6 +94,7 @@ public:
     char write_buffer_[kBufferSize];
     std::string session_uuid_;
     std::string login_;
+    std::mutex mutex_;
 
     void OnRead(const ErrorCode &error, size_t bytes_count);
 
@@ -98,7 +102,7 @@ public:
 
     size_t IsReadComplete(const ErrorCode &error, size_t bytes_count);
 
-    void ParseMessage(std::string message);
+    void ParseMessage(const std::string &message);
 
     void OnWrite(const ErrorCode &error, size_t bytes_count);
   };

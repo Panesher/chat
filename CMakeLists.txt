@@ -10,12 +10,10 @@ set(CMAKE_CXX_FLAGS_ASAN "-g -fsanitize=address,undefined -fno-sanitize-recover=
 
 find_package(JSON 3.2.0 REQUIRED)
 
+include_directories(other_soft/lib_basics)
+
 add_subdirectory(server)
 link_directories(server)
-include_directories(server/handlers)
-include_directories(server/structs)
 
 add_subdirectory(client)
 link_directories(client)
-include_directories(client/handlers)
-include_directories(client/structs)

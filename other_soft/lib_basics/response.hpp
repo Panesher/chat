@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 
+namespace lib_basics {
 namespace response {
 
 enum MessageCode {
@@ -19,14 +20,14 @@ enum MessageCode {
 namespace {
 
 const std::unordered_map<MessageCode, std::string> MessageMap = {
-    {MessageCode::kOk, "Ok"},
-    {MessageCode::kBadRequest, "Bad request"},
-    {MessageCode::kUnauthorized, "Unauthorized"},
-    {MessageCode::kForbidden, "Forbidden"},
-    {MessageCode::kNotFound, "Not found"},
-    {MessageCode::kStateMismatch, "State mismatch"},
-    {MessageCode::kGone, "Gone"},
-    {MessageCode::kServerError, "Internal server error"}
+    {MessageCode::kOk, "ok"},
+    {MessageCode::kBadRequest, "bad request"},
+    {MessageCode::kUnauthorized, "unauthorized"},
+    {MessageCode::kForbidden, "forbidden"},
+    {MessageCode::kNotFound, "not found"},
+    {MessageCode::kStateMismatch, "state mismatch"},
+    {MessageCode::kGone, "gone"},
+    {MessageCode::kServerError, "internal server error"}
 };
 
 } // namespace
@@ -44,3 +45,4 @@ struct Response {
 };
 
 } // namespace Response
+} // namespace lib_basics

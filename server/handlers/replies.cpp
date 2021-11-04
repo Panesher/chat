@@ -3,53 +3,16 @@
 
 #include <replies.hpp>
 #include <request.hpp>
+#include <parcer_helper.hpp>
 
 namespace replies {
 
 namespace {
-
-using Json = nlohmann::json;
+using namespace lib_basics;
 using namespace response;
+using namespace parcer_helper;
 using Command = request::Command;
-
-bool IsContain(const Json &data, const std::string &key) {
-  if (!data.contains(key)) {
-    std::cerr << "Parse error : There is no key \"" << key << "\n";
-    return false;
-  }
-  return true;
-}
-
-std::optional<std::string>
-ParseString(const Json &data, const std::string &key) {
-  if (!IsContain(data, key)) {
-    return {};
-  }
-  std::string res;
-  try {
-    data.at(key).get_to(res);
-    return res;
-  } catch (nlohmann::detail::type_error ex) {
-    std::cerr << "Parse error : " << key << " " << data[key]
-              << " cant be parsed as string" << "\n";
-    return {};
-  }
-}
-
-std::optional<int> ParseInt(const Json &data, const std::string &key) {
-  if (!IsContain(data, key)) {
-    return {};
-  }
-  int res;
-  try {
-    data.at(key).get_to(res);
-    return res;
-  } catch (nlohmann::detail::type_error ex) {
-    std::cerr << "Parse error : " << key << " " << data[key]
-              << " cant be parsed as integer" << "\n";
-    return {};
-  }
-}
+using Json = nlohmann::json;
 
 std::optional<request::request> ParseRequest(const Json &data) {
   request::request request;
@@ -88,23 +51,19 @@ Response OnHello(const request::RequestHello &request,
 Response OnAuthorization(const request::RequestAuthorization &request,
                          server::Server::ClientTalker &client) {
   std::cout << "Authorization" << std::endl;
-  auto response = client.IsPasswordCorrect(request.login, request.password);
+  auto response = client.LogIn(request.login, request.password);
   if (response.status == kOk) {
-    response = client.LogIn(request.login);
-    if (response.status == kOk) {
-      client.DoWrite(Json{{"id",      request.id},
-                          {"command", request.command},
-                          {"status",  "ok"},
-                          {"session", client.GetSessionUuid()}}.dump() + "\n");
-      return response;
-    }
+    client.DoWrite(Json{{"id",      request.id},
+                        {"command", request.command},
+                        {"status",  "ok"},
+                        {"session", client.GetSessionUuid()}}.dump() + "\n");
+    client.DoWriteAllUnreadedMesseges();
+    return response;
   }
   client.DoWrite(Json{{"id",      request.id},
                       {"command", request.command},
                       {"status",  "failed"},
                       {"message", response.AsString()}}.dump() + "\n");
-
-  client.DoWriteAllUnreadedMesseges();
   return response;
 }
 
@@ -129,42 +88,54 @@ Response OnRegister(const request::RequestRegister &request,
 Response OnSendMessage(const request::RequestSendMessage &request,
                        server::Server::ClientTalker &client) {
   std::cout << "Send message" << std::endl;
+  Response response = {kOk};
   if (request.session_uuid != client.GetSessionUuid()) {
-    Response response = {kStateMismatch};
-    client.DoWrite(Json{{"id",      request.id},
-                        {"command", "message_reply"},
-                        {"status",  "failed"},
-                        {"message", response.AsString()}}.dump() + "\n");
+    response = {kStateMismatch};
+  }
+  if (client.isAuthorizated()) {
+    response = {kUnauthorized};
+  }
+  if (response.status == kOk) {
+    int client_id = SendMessageToAllMembers(client, request.body);
+    client.DoWrite(Json{{"id",        request.id},
+                        {"command",   "message_reply"},
+                        {"status",    "ok"},
+                        {"client_id", client_id}}.dump() + "\n");
     return response;
   }
-  int client_id = SendMessageToAllMembers(client, request.body);
-  client.DoWrite(Json{{"id",        request.id},
-                      {"command",   "message_reply"},
-                      {"status",    "ok"},
-                      {"client_id", client_id}}.dump() + "\n");
-  return {kOk};
+  client.DoWrite(Json{{"id",      request.id},
+                      {"command", "message_reply"},
+                      {"status",  "failed"},
+                      {"message", response.AsString()}}.dump() + "\n");
+  return response;
 }
 
 Response
 OnSendMessageFromServer(const request::RequestSendMessageFromServer &request,
                         server::Server::ClientTalker &client) {
-  std::cout << "Send message from server" << std::endl;
+  std::cout << "Send message with login" << std::endl;
+  Response response = {kOk};
   if (request.session_uuid != client.GetSessionUuid() ||
       request.sender_login != client.GetUsername()) {
-    Response response = {kStateMismatch};
-    client.DoWrite(Json{{"id",      request.id},
-                        {"command", "message_reply"},
-                        {"status",  "failed"},
-                        {"message", response.AsString()}}.dump() + "\n");
+    response = {kStateMismatch};
+  }
+  if (client.isAuthorizated()) {
+    response = {kUnauthorized};
+  }
+  if (response.status == kOk) {
+    int client_id = SendMessageToAllMembers(client, request.body,
+                                            request.sender_login);
+    client.DoWrite(Json{{"id",        request.id},
+                        {"command",   "message_reply"},
+                        {"status",    "ok"},
+                        {"client_id", client_id}}.dump() + "\n");
     return response;
   }
-  int client_id = SendMessageToAllMembers(client, request.body,
-                                          request.sender_login);
-  client.DoWrite(Json{{"id",        request.id},
-                      {"command",   "message_reply"},
-                      {"status",    "ok"},
-                      {"client_id", client_id}}.dump() + "\n");
-  return {kOk};
+  client.DoWrite(Json{{"id",      request.id},
+                      {"command", "message_reply"},
+                      {"status",  "failed"},
+                      {"message", response.AsString()}}.dump() + "\n");
+  return response;
 }
 
 Response OnLogOut(const request::RequestLogOut &request,
@@ -202,12 +173,19 @@ Response OnPing(const request::RequestPing &request,
   return {kOk};
 }
 
+Response WriteBadRequest(server::Server::ClientTalker &client) {
+  Response response = {kBadRequest};
+  client.DoWrite(
+      Json{{"status", response.AsString()}}.dump() + "\n");
+  return response;
+}
+
 } // namespace
 
 Response ManageMessage(const Json &data, server::Server::ClientTalker &client) {
   auto request_part = ParseRequest(data);
   if (!request_part) {
-    return {kBadRequest};
+    return WriteBadRequest(client);
   }
 
   switch (request_part->command) {
@@ -222,26 +200,26 @@ Response ManageMessage(const Json &data, server::Server::ClientTalker &client) {
                   {request_part->id, request_part->command, *body, *session_id,
                    *sender_login}, client);
             }
-            return {kBadRequest};
+            return WriteBadRequest(client);
           }
           return OnSendMessage(
               {request_part->id, request_part->command, *body, *session_id},
               client);
         }
       }
-      return {kBadRequest};
+      return WriteBadRequest(client);
     case Command::kPing:
       if (auto session_id = ParseString(data, "session")) {
         return OnPing({request_part->id, request_part->command, *session_id},
                       client);
       }
-      return {kBadRequest};
+      return WriteBadRequest(client);
     case Command::kLogOut:
       if (auto session_id = ParseString(data, "session")) {
         return OnLogOut({request_part->id, request_part->command, *session_id},
                         client);
       }
-      return {kBadRequest};
+      return WriteBadRequest(client);
     case Command::kLogin:
       if (auto login = ParseString(data, "login")) {
         if (auto password = ParseString(data, "password")) {
@@ -250,7 +228,7 @@ Response ManageMessage(const Json &data, server::Server::ClientTalker &client) {
               client);
         }
       }
-      return {kBadRequest};
+      return WriteBadRequest(client);
     case Command::kRegister:
       if (auto login = ParseString(data, "login")) {
         if (auto password = ParseString(data, "password")) {
@@ -259,9 +237,9 @@ Response ManageMessage(const Json &data, server::Server::ClientTalker &client) {
               client);
         }
       }
-      return {kBadRequest};
+      return WriteBadRequest(client);
   }
-  return {kBadRequest};
+  return WriteBadRequest(client);
 }
 
 } // namespace replies
