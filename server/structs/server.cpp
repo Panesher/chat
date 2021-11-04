@@ -13,10 +13,6 @@ using namespace boost::asio;
 
 namespace server {
 
-namespace {
-using Json = nlohmann::json;
-} // namespace
-
 Server::Server(size_t port)
     : service_(), acceptor_(service_, ip::tcp::endpoint(ip::tcp::v4(), port)),
       clients_() {
