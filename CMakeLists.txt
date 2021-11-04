@@ -14,3 +14,8 @@ add_subdirectory(server)
 link_directories(server)
 include_directories(server/handlers)
 include_directories(server/structs)
+
+add_subdirectory(client)
+link_directories(client)
+include_directories(client/handlers)
+include_directories(client/structs)
