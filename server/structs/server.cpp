@@ -1,10 +1,10 @@
 #include <server.hpp>
 
 #include <boost/bind.hpp>
-#include <algorithm>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <algorithm>
 #include <unordered_set>
 
 #include <replies.hpp>
