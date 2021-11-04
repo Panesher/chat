@@ -4,7 +4,7 @@ include_directories(handlers)
 include_directories(structs)
 
 add_library(server_handlers STATIC handlers/replies.cpp)
-add_library(server STATIC structs/server.cpp)
+add_library(server STATIC structs/Server.cpp)
 add_library(server_storages STATIC structs/storages.cpp)
 target_include_directories(server_handlers PUBLIC handlers)
 target_include_directories(server PUBLIC structs)

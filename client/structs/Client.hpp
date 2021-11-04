@@ -22,14 +22,16 @@ public:
 
     void Connect(boost::asio::ip::tcp::endpoint);
 
-    void DoRequest();
+    bool TryDoRequest();
 
-    std::string GetLogin() const;
+    [[nodiscard]] std::string GetLogin() const;
+
+    void DoRead();
+
+    bool IsStarted() const;
 
   private:
     void WriteRequest(const std::string &);
-
-    void DoRead();
 
     void ParseAnswer();
 
@@ -50,6 +52,7 @@ public:
   };
 
 private:
+  bool is_service_run_;
   Talker talker_;
 };
 } // namespace client

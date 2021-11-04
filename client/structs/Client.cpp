@@ -1,21 +1,33 @@
-#include <client.hpp>
+#include <Client.hpp>
 
 #include <boost/thread.hpp>
 #include <iostream>
 #include <talker_helper.hpp>
-#include <request.hpp>
-#include <json.hpp>
-#include <parcer_helper.hpp>
 
 namespace client {
 
 namespace {
-using Json = nlohmann::json;
 using namespace boost::asio;
-using namespace lib_basics;
 } // namespace
 
-Client::Client() : talker_() {}
+Client::Client() : talker_(), is_service_run_(false) {}
+
+void Client::Run() {
+  is_service_run_ = true;
+  while (true) {
+    talker_.TryDoRequest();
+    is_service_run_ = talker_.IsStarted();
+    if (!is_service_run_) {
+      std::cout << "service stopped" << std::endl;
+      return;
+    }
+    talker_.DoRead();
+  }
+}
+
+bool Client::Talker::IsStarted() const {
+  return started_;
+}
 
 void Client::Connect(ip::tcp::endpoint ep) {
   talker_.Connect(std::move(ep));
@@ -28,7 +40,7 @@ void Client::Talker::Connect(ip::tcp::endpoint ep) {
   connected_ = true;
 }
 
-void Client::Talker::DoRequest() {
+bool Client::Talker::TryDoRequest() {
   if (!connected_) {
     std::cout << "Connect to server before you do requests" << std::endl;
   }
@@ -36,24 +48,19 @@ void Client::Talker::DoRequest() {
                                             login_);
   if (request.is_stop) {
     std::cout << "stop client" << std::endl;
-//    stop
-    return;
+    started_ = true;
+    return false;
   }
-  if (request.message) {
-    return WriteRequest(*request.message);
+  if (request.message || connected_) {
+    DoWrite(*request.message);
+    return true;
   }
+  return false;
 }
 
 std::string Client::Talker::GetLogin() const {
   if (!login_) return "";
   return *login_;
-}
-
-void Client::Talker::WriteRequest(const std::string &request_json) {
-  if (!connected_) {
-    return;
-  }
-  DoWrite(request_json);
 }
 
 void Client::Talker::DoRead() {
@@ -68,12 +75,15 @@ void Client::Talker::DoRead() {
 
 void Client::Talker::ParseAnswer() {
   std::string message_serv(buff_, already_read_);
+  if (message_serv.empty()) {
+    return;
+  }
   std::cout << " Message got from server : " << message_serv;
   if (login_) {
     std::cout << " for " << *login_;
   }
   std::cout << std::endl;
-
+  talker_helper::ParseAnswer(message_serv);
 }
 
 void Client::Talker::DoWrite(const std::string &msg) {

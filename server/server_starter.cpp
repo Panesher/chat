@@ -1,4 +1,4 @@
-#include <server.hpp>
+#include <Server.hpp>
 
 int main() {
   boost::shared_ptr<server::Server> serv_ptr(new server::Server(8080));

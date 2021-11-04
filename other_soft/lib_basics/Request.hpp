@@ -60,16 +60,16 @@ Command CommandFromString(const std::string &command) {
   }
 }
 
-struct request {
+struct Request {
   int id;
   Command command;
 };
 
-struct RequestAuthorization : public request {
+struct RequestAuthorization : public Request {
   std::string login, password;
 };
 
-struct RequestSendMessage : public request {
+struct RequestSendMessage : public Request {
   std::string body;
   std::string session_uuid;
 };
@@ -78,13 +78,13 @@ struct RequestSendMessageFromServer : public RequestSendMessage {
   std::string sender_login;
 };
 
-struct RequestPing : public request {
+struct RequestPing : public Request {
   std::string session_uuid;
 };
 
 typedef RequestPing RequestLogOut;
 typedef RequestAuthorization RequestRegister;
-typedef request RequestHello;
+typedef Request RequestHello;
 
 } // namespace request
 } // namespace lib_basics

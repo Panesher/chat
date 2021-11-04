@@ -1,17 +1,24 @@
-#include <requests.hpp>
+#include <talker_helper.hpp>
 
 #include <iostream>
 
 #include <json.hpp>
-#include <request.hpp>
+#include <Request.hpp>
+#include <Response.hpp>
+#include <parcer_helper.hpp>
 
 namespace talker_helper {
 
 namespace {
+using namespace lib_basics;
 using namespace lib_basics::request;
 using Json = nlohmann::json;
 
-const size_t min_lenth = 4;
+const std::string kBadRequestAsString = "bad request";
+const std::vector<std::string> kKeysForParsing = {
+    "id", "command", "status", "message", "client_id", "session"
+};
+const size_t min_login_length = 4;
 
 Request WriteCommandList() {
   std::cout
@@ -30,17 +37,17 @@ Request WriteCommandList() {
 Request MakeLoginRequest(const Command &command, int id) {
   std::string login, password;
   int counter_bad_requests = 0;
-  while ((login.size() < min_lenth) && ((++counter_bad_requests) < 5)) {
-    std::cout << "Write login at least " << min_lenth << " symbols"
+  while ((login.size() < min_login_length) && ((++counter_bad_requests) < 5)) {
+    std::cout << "Write login at least " << min_login_length << " symbols"
               << std::endl;
     std::cin >> login;
   }
-  while ((password.size() < min_lenth) && ((++counter_bad_requests) < 5)) {
-    std::cout << "Write password at least " << min_lenth << " symbols"
+  while ((password.size() < min_login_length) && ((++counter_bad_requests) < 5)) {
+    std::cout << "Write password at least " << min_login_length << " symbols"
               << std::endl;
     std::cin >> password;
   }
-  if ((login.size() < min_lenth) || (password.size() < min_lenth)) {
+  if ((login.size() < min_login_length) || (password.size() < min_login_length)) {
     std::cout << "To many bad requests" << std::endl;
     return {};
   }
@@ -107,19 +114,31 @@ void ParseMessage(const Json &answer) {
     return;
   }
   std::cout << "You got message ";
-  if (auto sender_login = parcer_helper::ParseString(answer,
-                                                     "sender_login")) {
+  if (auto sender_login = parcer_helper::ParseString(answer, "sender_login")) {
     std::cout << " from " << *sender_login;
   }
   std::cout << ": " << *message;
 }
 
-void ParseCommand(const Json &answer) {
-  auto command = parcer_helper::ParseString(answer, "command");
-  if (!command) {
-    return;
+std::optional<std::string>
+MakeStringFromKeys(const Json &answer) {
+  std::string out;
+  int counter = 0;
+  for (const auto &key: kKeysForParsing) {
+    if (auto value = parcer_helper::ParseString(answer, key)) {
+      out += "  " + key + ": " + *value + "'\n";
+    }
+    if (++counter > 2 && out.empty()) {
+      return {};
+    }
   }
+  return "Response from server:\n" + out;
+}
 
+void ParseCommand(const Json &answer) {
+  if (auto out = MakeStringFromKeys(answer)) {
+    std::cout << *out;
+  }
 }
 
 } // namespace

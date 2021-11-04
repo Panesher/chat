@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.20)
 include_directories(handlers)
 include_directories(structs)
 
-add_library(client_requests STATIC handlers/requests.cpp)
-add_library(client STATIC structs/client.cpp)
+add_library(client_requests STATIC handlers/talker_helper.cpp)
+add_library(client STATIC structs/Client.cpp)
 target_include_directories(client_requests PUBLIC handlers)
 target_include_directories(client PUBLIC structs)
 

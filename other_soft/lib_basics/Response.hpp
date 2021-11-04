@@ -20,14 +20,14 @@ enum MessageCode {
 namespace {
 
 const std::unordered_map<MessageCode, std::string> MessageMap = {
-    {MessageCode::kOk, "ok"},
-    {MessageCode::kBadRequest, "bad request"},
-    {MessageCode::kUnauthorized, "unauthorized"},
-    {MessageCode::kForbidden, "forbidden"},
-    {MessageCode::kNotFound, "not found"},
-    {MessageCode::kStateMismatch, "state mismatch"},
-    {MessageCode::kGone, "gone"},
-    {MessageCode::kServerError, "internal server error"}
+    {kOk, "ok"},
+    {kBadRequest, "bad request"},
+    {kUnauthorized, "unauthorized"},
+    {kForbidden, "forbidden"},
+    {kNotFound, "not found"},
+    {kStateMismatch, "state mismatch"},
+    {kGone, "gone"},
+    {kServerError, "internal server error"}
 };
 
 } // namespace

@@ -2,7 +2,7 @@
 #include <optional>
 
 #include <replies.hpp>
-#include <request.hpp>
+#include <Request.hpp>
 #include <parcer_helper.hpp>
 
 namespace replies {
@@ -14,8 +14,8 @@ using namespace parcer_helper;
 using Command = request::Command;
 using Json = nlohmann::json;
 
-std::optional<request::request> ParseRequest(const Json &data) {
-  request::request request;
+std::optional<request::Request> ParseRequest(const Json &data) {
+  request::Request request;
   auto id = ParseInt(data, "id");
   if (!id) {
     return {};
@@ -173,10 +173,18 @@ Response OnPing(const request::RequestPing &request,
   return {kOk};
 }
 
-Response WriteBadRequest(server::Server::ClientTalker &client) {
+Response WriteBadRequest(server::Server::ClientTalker &client,
+                         const std::optional<int> &id = std::nullopt,
+                         const std::optional<Command> &command = std::nullopt) {
   Response response = {kBadRequest};
-  client.DoWrite(
-      Json{{"status", response.AsString()}}.dump() + "\n");
+  Json resp = Json{{"status", response.AsString()}};
+  if (id) {
+    resp.push_back({"id", *id});
+  }
+  if (command) {
+    resp.push_back({"command", request::CommandAsString(*command)});
+  }
+  client.DoWrite(resp.dump() + "\n");
   return response;
 }
 
@@ -200,26 +208,26 @@ Response ManageMessage(const Json &data, server::Server::ClientTalker &client) {
                   {request_part->id, request_part->command, *body, *session_id,
                    *sender_login}, client);
             }
-            return WriteBadRequest(client);
+            return WriteBadRequest(client, request_part->id, request_part->command);
           }
           return OnSendMessage(
               {request_part->id, request_part->command, *body, *session_id},
               client);
         }
       }
-      return WriteBadRequest(client);
+      return WriteBadRequest(client, request_part->id, request_part->command);
     case Command::kPing:
       if (auto session_id = ParseString(data, "session")) {
         return OnPing({request_part->id, request_part->command, *session_id},
                       client);
       }
-      return WriteBadRequest(client);
+      return WriteBadRequest(client, request_part->id, request_part->command);
     case Command::kLogOut:
       if (auto session_id = ParseString(data, "session")) {
         return OnLogOut({request_part->id, request_part->command, *session_id},
                         client);
       }
-      return WriteBadRequest(client);
+      return WriteBadRequest(client, request_part->id, request_part->command);
     case Command::kLogin:
       if (auto login = ParseString(data, "login")) {
         if (auto password = ParseString(data, "password")) {
@@ -228,7 +236,7 @@ Response ManageMessage(const Json &data, server::Server::ClientTalker &client) {
               client);
         }
       }
-      return WriteBadRequest(client);
+      return WriteBadRequest(client, request_part->id, request_part->command);
     case Command::kRegister:
       if (auto login = ParseString(data, "login")) {
         if (auto password = ParseString(data, "password")) {
@@ -237,9 +245,9 @@ Response ManageMessage(const Json &data, server::Server::ClientTalker &client) {
               client);
         }
       }
-      return WriteBadRequest(client);
+      return WriteBadRequest(client, request_part->id, request_part->command);
   }
-  return WriteBadRequest(client);
+  return WriteBadRequest(client, request_part->id, request_part->command);
 }
 
 } // namespace replies

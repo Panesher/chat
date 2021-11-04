@@ -1,8 +1,8 @@
 #pragma once
 
-#include <response.hpp>
+#include <Response.hpp>
 
-#include <server.hpp>
+#include <Server.hpp>
 
 namespace replies {
 
