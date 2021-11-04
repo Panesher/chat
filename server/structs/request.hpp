@@ -41,7 +41,7 @@ const std::unordered_map<std::string, Command> kCommandMapReversed = {
     {"ping_reply", kPingReply},
     {"register", kRegister},
     {"logout", kLogOut},
-    {"logout", kLogOutReply},
+    {"logout", kLogOutReply}
 };
 
 } // namespace
@@ -54,7 +54,7 @@ std::string CommandAsString(Command command) {
   }
 }
 
-Command CommandFromString(std::string command) {
+Command CommandFromString(const std::string &command) {
   try {
     return kCommandMapReversed.at(command);
   } catch (const std::out_of_range& e) {

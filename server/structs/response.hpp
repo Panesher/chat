@@ -26,7 +26,7 @@ const std::unordered_map<MessageCode, std::string> MessageMap = {
     {MessageCode::kNotFound, "Not found"},
     {MessageCode::kStateMismatch, "State mismatch"},
     {MessageCode::kGone, "Gone"},
-    {MessageCode::kServerError, "Internal server error"},
+    {MessageCode::kServerError, "Internal server error"}
 };
 
 } // namespace

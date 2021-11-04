@@ -5,7 +5,7 @@
 
 namespace replies {
 
-response::Response ManageMessage(
-    const nlohmann::json&, server::Server::ClientTalker&);
+response::Response
+ManageMessage(const nlohmann::json &, server::Server::ClientTalker &);
 
 } // namespace replies

@@ -28,45 +28,58 @@ public:
   static const int kBufferSize = 1024;
 
   Server(size_t port);
+
   void Start();
-  boost::asio::io_service& GetService();
+
+  boost::asio::io_service &GetService();
+
   void AddClient(ClientPtr client);
+
   void RemoveClient(ClientPtr client);
 
-  response::Response InsertUser(const std::string& login,
-                                const std::string& password);
-  response::Response IsPasswordCorrect(const std::string& login,
-                                       const std::string& password) const;
-  response::Response EraseUser(const std::string& login,
-                               const std::string& password);
+  response::Response
+  InsertUser(const std::string &login, const std::string &password);
 
-  class ClientTalker : public boost::enable_shared_from_this<ClientTalker>,
-                       boost::asio::noncopyable {
+  response::Response IsPasswordCorrect(const std::string &login,
+                                       const std::string &password) const;
+
+  response::Response
+  EraseUser(const std::string &login, const std::string &password);
+
+  class ClientTalker
+      : public boost::enable_shared_from_this<ClientTalker>,
+        boost::asio::noncopyable {
   public:
     ClientTalker(boost::shared_ptr<Server> server);
 
     static ClientPtr NewClient(boost::shared_ptr<Server> server);
+
     void Start();
+
     void Stop();
+
     bool IsStarted() const;
 
     Socket &GetSocket();
 
     std::string GetUsername() const;
 
-    response::Response LogIn(const std::string&);
+    response::Response LogIn(const std::string &);
 
     std::string GetSessionUuid() const;
 
-    int DoWriteToAllOtherClients(const std::string&);
+    int DoWriteToAllOtherClients(const std::string &);
+
     void DoWriteAllUnreadedMesseges();
 
-    response::Response InsertUser(const std::string& login,
-                                  const std::string& password);
-    response::Response IsPasswordCorrect(const std::string& login,
-                                         const std::string& password) const;
-    response::Response EraseUser(const std::string& login,
-                                 const std::string& password);
+    response::Response
+    InsertUser(const std::string &login, const std::string &password);
+
+    response::Response IsPasswordCorrect(const std::string &login,
+                                         const std::string &password) const;
+
+    response::Response
+    EraseUser(const std::string &login, const std::string &password);
 
     void DoWrite(std::string message);
 
@@ -80,9 +93,11 @@ public:
     std::string login_;
 
     void OnRead(const ErrorCode &error, size_t bytes_count);
+
     void DoRead();
+
     size_t IsReadComplete(const ErrorCode &error, size_t bytes_count);
-    
+
     void ParseMessage(std::string message);
 
     void OnWrite(const ErrorCode &error, size_t bytes_count);

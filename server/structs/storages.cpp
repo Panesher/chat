@@ -10,8 +10,8 @@ size_t UsersTable::Size() const {
   return users_.size();
 }
 
-Response UsersTable::InsertUser(const std::string &login,
-                                const std::string &password) {
+Response
+UsersTable::InsertUser(const std::string &login, const std::string &password) {
   if (users_.count(login)) {
     return {kStateMismatch};
   }
@@ -30,8 +30,8 @@ Response UsersTable::IsPasswordCorrect(const std::string &login,
   return {kOk};
 }
 
-Response UsersTable::EraseUser(const std::string &login,
-                               const std::string &password) {
+Response
+UsersTable::EraseUser(const std::string &login, const std::string &password) {
   if (!users_.count(login)) {
     return {kNotFound};
   }
@@ -42,12 +42,13 @@ Response UsersTable::EraseUser(const std::string &login,
   return {kOk};
 }
 
-int MessageTable::InsertMessage(const std::string& message) {
+int MessageTable::InsertMessage(const std::string &message) {
   table_messages_[max_id_++] = message;
   return max_id_ - 1;
 }
 
-Response MessageTable::InsertReciever(int id, const std::string& login_reciever) {
+Response
+MessageTable::InsertReciever(int id, const std::string &login_reciever) {
   if (!table_messages_.count(id)) {
     return {kNotFound};
   }
@@ -59,7 +60,7 @@ Response MessageTable::InsertReciever(int id, const std::string& login_reciever)
   return {kOk};
 }
 
-std::vector<int> MessageTable::PopReciever(const std::string& login_reciever) {
+std::vector<int> MessageTable::PopReciever(const std::string &login_reciever) {
   if (!table_unreaded_messages_.count(login_reciever)) {
     return {};
   }

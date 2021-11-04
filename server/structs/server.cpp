@@ -22,24 +22,24 @@ Server::Server(size_t port)
 
 void Server::Start() {
   ClientPtr client = ClientTalker::NewClient(shared_from_this());
-  acceptor_.async_accept(
-      client->GetSocket(),
-      boost::bind(&Server::AcceptHandler, shared_from_this(), client, _1));
+  acceptor_.async_accept(client->GetSocket(),
+                         boost::bind(&Server::AcceptHandler, shared_from_this(),
+                                     client, _1));
   service_.run();
 }
 
-response::Response Server::InsertUser(const std::string& login,
-                                      const std::string& password) {
+response::Response
+Server::InsertUser(const std::string &login, const std::string &password) {
   return user_table_.InsertUser(login, password);
 }
 
-response::Response Server::IsPasswordCorrect(const std::string& login,
-                                             const std::string& password) const {
+response::Response Server::IsPasswordCorrect(const std::string &login,
+                                             const std::string &password) const {
   return user_table_.IsPasswordCorrect(login, password);
 }
 
-response::Response Server::EraseUser(const std::string& login,
-                                     const std::string& password) {
+response::Response
+Server::EraseUser(const std::string &login, const std::string &password) {
   return user_table_.EraseUser(login, password);
 }
 
@@ -48,9 +48,9 @@ Server::Socket &Server::ClientTalker::GetSocket() { return socket_; }
 void Server::AcceptHandler(ClientPtr client, const ErrorCode &error) {
   client->Start();
   ClientPtr new_clinet = ClientTalker::NewClient(shared_from_this());
-  acceptor_.async_accept(
-      new_clinet->GetSocket(),
-      boost::bind(&Server::AcceptHandler, shared_from_this(), new_clinet, _1));
+  acceptor_.async_accept(new_clinet->GetSocket(),
+                         boost::bind(&Server::AcceptHandler, shared_from_this(),
+                                     new_clinet, _1));
 }
 
 io_service &Server::GetService() { return service_; }
@@ -87,11 +87,11 @@ Server::ClientTalker::NewClient(boost::shared_ptr<Server> server) {
 }
 
 void Server::ClientTalker::DoRead() {
-  async_read(
-      socket_, buffer(read_buffer_),
-      boost::bind(&Server::ClientTalker::IsReadComplete, shared_from_this(), _1,
-                  _2),
-      boost::bind(&Server::ClientTalker::OnRead, shared_from_this(), _1, _2));
+  async_read(socket_, buffer(read_buffer_),
+             boost::bind(&Server::ClientTalker::IsReadComplete,
+                         shared_from_this(), _1, _2),
+             boost::bind(&Server::ClientTalker::OnRead, shared_from_this(), _1,
+                         _2));
 }
 
 size_t Server::ClientTalker::IsReadComplete(const ErrorCode &error,
@@ -144,16 +144,16 @@ void Server::ClientTalker::DoWrite(std::string message) {
   }
   std::cout << "send message : " << message << std::endl;
   std::copy(message.begin(), message.end(), write_buffer_);
-  socket_.async_write_some(
-      buffer(write_buffer_),
-      boost::bind(&Server::ClientTalker::OnWrite, shared_from_this(), _1, _2));
+  socket_.async_write_some(buffer(write_buffer_),
+                           boost::bind(&Server::ClientTalker::OnWrite,
+                                       shared_from_this(), _1, _2));
 }
 
 std::string Server::ClientTalker::GetUsername() const {
   return login_;
 }
 
-response::Response Server::ClientTalker::LogIn(const std::string& login) {
+response::Response Server::ClientTalker::LogIn(const std::string &login) {
   if (!login_.empty()) {
     return {response::kStateMismatch};
   }
@@ -165,18 +165,19 @@ void Server::ClientTalker::OnWrite(const ErrorCode &error, size_t bytes_count) {
   DoRead();
 }
 
-response::Response Server::ClientTalker::InsertUser(const std::string& login,
-                                                    const std::string& password) {
+response::Response Server::ClientTalker::InsertUser(const std::string &login,
+                                                    const std::string &password) {
   return my_server_->InsertUser(login, password);
 }
 
-response::Response Server::ClientTalker::IsPasswordCorrect(const std::string& login,
-                                                           const std::string& password) const {
+response::Response
+Server::ClientTalker::IsPasswordCorrect(const std::string &login,
+                                        const std::string &password) const {
   return my_server_->IsPasswordCorrect(login, password);
 }
 
-response::Response Server::ClientTalker::EraseUser(const std::string& login,
-                                                   const std::string& password) {
+response::Response Server::ClientTalker::EraseUser(const std::string &login,
+                                                   const std::string &password) {
   return my_server_->EraseUser(login, password);
 }
 
@@ -185,14 +186,14 @@ void Server::ClientTalker::DoWriteAllUnreadedMesseges() {
     return;
   }
   auto unreaded_messages = my_server_->message_table_.PopReciever(login_);
-  for (auto message : unreaded_messages) {
+  for (auto message: unreaded_messages) {
     DoWrite(my_server_->message_table_.FindMessageById(message));
   }
 }
 
-int Server::ClientTalker::DoWriteToAllOtherClients(const std::string& message) {
+int Server::ClientTalker::DoWriteToAllOtherClients(const std::string &message) {
   std::unordered_set<std::string> logins_recived;
-  for (auto& client : my_server_->clients_) {
+  for (auto &client: my_server_->clients_) {
     if (client->login_ == login_) {
       continue;
     }
@@ -203,7 +204,7 @@ int Server::ClientTalker::DoWriteToAllOtherClients(const std::string& message) {
     return my_server_->message_table_.IncreaseMaxId();
   }
   int id = my_server_->message_table_.InsertMessage(message);
-  for (const auto& login : my_server_->user_table_.users_) {
+  for (const auto &login: my_server_->user_table_.users_) {
     if (login.first == login_ || logins_recived.count(login.first)) {
       continue;
     }
