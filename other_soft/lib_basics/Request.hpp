@@ -2,8 +2,7 @@
 #include <unordered_map>
 #include <boost/uuid/uuid.hpp>
 
-namespace lib_basics {
-namespace request {
+namespace lib_basics::request {
 
 enum Command {
   kHello,
@@ -96,5 +95,4 @@ typedef RequestPing RequestLogOut;
 typedef RequestAuthorization RequestRegister;
 typedef Request RequestHello;
 
-} // namespace request
-} // namespace lib_basics
+} // namespace lib_basics::request

@@ -2,8 +2,7 @@
 
 #include <json.hpp>
 
-namespace lib_basics {
-namespace parcer_helper {
+namespace lib_basics::parcer_helper {
 
 bool IsContain(const nlohmann::json &data, const std::string &key) {
   if (!data.contains(key)) {
@@ -45,5 +44,4 @@ ParseInt(const nlohmann::json &data, const std::string &key) {
   }
 }
 
-} // namespace parcer_helper
-} // namespace lib_basics
+} // namespace lib_basics::parcer_helper

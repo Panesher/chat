@@ -16,12 +16,12 @@ void Client::Run() {
   while (true) {
     talker_.TryDoRequest();
     if (!talker_.IsConnected() || !talker_.IsStarted()) {
-      std::cout << "service stopped" << std::endl;
+      std::cout << "Service stopped" << std::endl;
       return;
     }
     talker_.TryRead();
     if (!talker_.IsConnected() || !talker_.IsStarted()) {
-      std::cout << "service stopped" << std::endl;
+      std::cout << "Service stopped or disconnected" << std::endl;
       return;
     }
   }
@@ -39,9 +39,9 @@ void Client::Connect(ip::tcp::endpoint ep) {
   talker_.Connect(std::move(ep));
 }
 
-Client::Talker::Talker() : socket_(service_), started_(true) {}
+Client::Talker::Talker() : socket_(service_), started_(true), already_read_(0), buff_() {}
 
-void Client::Talker::Connect(ip::tcp::endpoint ep) {
+void Client::Talker::Connect(const ip::tcp::endpoint& ep) {
   try {
     socket_.connect(ep);
   } catch (const boost::exception &e) {
@@ -58,7 +58,6 @@ bool Client::Talker::TryDoRequest() {
   auto request = talker_helper::MakeRequest(++id_transaction_, session_uuid_,
                                             login_);
   if (request.is_stop) {
-    std::cout << "stop client" << std::endl;
     connected_ = false;
     return false;
   }
@@ -93,28 +92,6 @@ bool Client::Talker::TryRead() {
   return true;
 }
 
-void Client::Talker::OnRead(const boost::system::error_code &error,
-                            size_t bytes_count) {
-  if (error) {
-    started_ = false;
-  }
-  if (!started_) {
-    return;
-  }
-
-  std::string message(buff_, bytes_count);
-  if (auto session = ParseFromAnswerSessionUuid()) {
-    session_uuid_ = session;
-    login_ = possible_login_;
-  }
-}
-
-void Client::Talker::DoRead() {
-  async_read(socket_, buffer(buff_),
-             boost::bind(&Client::Talker::ReadComplete, this, _1, _2),
-             boost::bind(&Client::Talker::OnRead, this, _1, _2));
-}
-
 std::optional<std::string> Client::Talker::ParseFromAnswerSessionUuid() {
   if ((already_read_ < 2) && (buff_[0] == 0)) {
     TryRead();
@@ -142,9 +119,9 @@ void Client::Talker::DoWrite(const std::string &msg) {
   if (msg.empty()) {
     return;
   }
-  if (login_) {
-    std::cout << *login_ << " ";
-  }
+//  if (login_) {
+//    std::cout << *login_ << " ";
+//  }
 //  std::cout << "send to server : " << msg << std::endl;
   socket_.write_some(buffer(msg));
 }

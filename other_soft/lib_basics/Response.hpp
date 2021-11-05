@@ -3,8 +3,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace lib_basics {
-namespace response {
+namespace lib_basics::response {
 
 enum MessageCode {
   kOk = 200,
@@ -44,5 +43,4 @@ struct Response {
   }
 };
 
-} // namespace Response
-} // namespace lib_basics
+} // namespace lib_basics::Response

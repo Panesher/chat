@@ -246,8 +246,9 @@ Response ManageMessage(const Json &data, const server::Server::ClientPtr client)
         }
       }
       return WriteBadRequest(client, request_part->id, request_part->command);
+    default:
+      return WriteBadRequest(client, request_part->id, request_part->command);
   }
-  return WriteBadRequest(client, request_part->id, request_part->command);
 }
 
 } // namespace replies

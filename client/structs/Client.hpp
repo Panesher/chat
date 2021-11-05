@@ -20,7 +20,7 @@ public:
   public:
     Talker();
 
-    void Connect(boost::asio::ip::tcp::endpoint);
+    void Connect(const boost::asio::ip::tcp::endpoint&);
 
     bool TryDoRequest();
 
@@ -28,17 +28,11 @@ public:
 
     bool TryRead();
 
-    bool IsStarted() const;
+    [[nodiscard]] bool IsStarted() const;
 
-    bool IsConnected() const;
-
-    void DoRead();
-
-    void Run();
+    [[nodiscard]] bool IsConnected() const;
 
   private:
-    void OnRead(const boost::system::error_code &error, size_t bytes_count);
-
     std::optional<std::string> ParseFromAnswerSessionUuid();
 
     void DoWrite(const std::string &msg);
@@ -50,7 +44,7 @@ public:
     enum { max_msg = 1024 };
     boost::asio::io_service service_;
     boost::asio::ip::tcp::socket socket_;
-    int already_read_;
+    size_t already_read_;
     char buff_[max_msg];
     bool started_;
     std::optional<std::string> login_;
