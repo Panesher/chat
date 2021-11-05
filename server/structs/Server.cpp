@@ -224,7 +224,7 @@ int Server::ClientTalker::DoWriteToAllOtherClients(const std::string &message) {
       continue;
     }
     logins_recived.insert(client->login_);
-    DoWriteWothoutRead(message);
+    client->DoWriteWothoutRead(message);
   }
   if (my_server_->user_table_.Size() <= logins_recived.size() + 1) {
     return my_server_->message_table_.IncreaseMaxId();

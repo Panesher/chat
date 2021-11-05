@@ -12,11 +12,15 @@ int main() {
   if (ip == "lh") {
     ip = "127.0.0.1";
   }
-  boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string(ip),
-                                    port);
-  client::Client client;
-  client.Connect(ep);
-  client.Run();
+  try {
+    boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string(ip),
+                                      port);
+    client::Client client;
+    client.Connect(ep);
+    client.Run();
+  } catch (const boost::system::system_error &ex) {
+    std::cout << "Ip address can't be parsed" << std::endl;
+  }
 
   return 0;
 }

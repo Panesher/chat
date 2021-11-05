@@ -14,6 +14,10 @@ const std::string kEndOfFile = "read: End of file";
 Client::Client() : talker_() {}
 
 void Client::Run() try {
+  if (!talker_.IsConnected()) {
+    std::cout << "Connect to server before you do requests" << std::endl;
+    return;
+  }
   while (true) {
     talker_.TryDoRequest();
     if (!talker_.IsConnected()) {
