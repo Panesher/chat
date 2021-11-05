@@ -52,10 +52,14 @@ Request MakeLoginRequest(const Command &command, int id) {
     std::cout << "To many bad requests" << std::endl;
     return {};
   }
-  return {(Json{{"id",       id},
-                {"command",  CommandAsString(command)},
-                {"login",    login},
-                {"password", password}}.dump()) + "\n"};
+  Request request = {(Json{{"id",       id},
+                           {"command",  CommandAsString(command)},
+                           {"login",    login},
+                           {"password", password}}.dump()) + "\n"};
+  if (command == lib_basics::request::kLogin) {
+    request.login = login;
+  }
+  return request;
 }
 
 Request MakeLogoutRequest(const Command &command, int id,
@@ -146,15 +150,17 @@ std::optional<std::string> MakeStringFromKeys(const Json &answer) {
   return "Response from server:\n" + out;
 }
 
-std::optional<std::string> ParseCommand(const Json &answer) {
+Response ParseCommand(const Json &answer) {
+  Response response;
   if (auto out = MakeStringFromKeys(answer)) {
+    response.is_message = false;
     std::cout << *out;
   }
   if (auto session_uuid = parcer_helper::ParseString(answer, "session")) {
     // status always Ok if session returned
-    return session_uuid;
+    response.session_uuid = session_uuid;
   }
-  return {};
+  return response;
 }
 
 } // namespace
@@ -162,32 +168,34 @@ std::optional<std::string> ParseCommand(const Json &answer) {
 Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
                     const std::optional<std::string> &login) {
   std::string command_as_string;
-  std::cout << "Write command ('help' to get command list)" << std::endl;
-  std::cin >> command_as_string;
-  auto command = CommandFromString(command_as_string);
-  switch (command) {
-    case kHelp:
-      return WriteCommandList();
-    case kRegister:
-    case kLogin:
-      return MakeLoginRequest(command, id);
-    case kMessage:
-      return MakeMessageRequest(id, session_uuid, login);
-    case kPing:
-    case kLogOut:
-      return MakeLogoutRequest(command, id, session_uuid);
-    case kStop:
-      return {std::nullopt, std::nullopt, true};
-    case kHello:
-      return MakeHelloRequest(id);
-    case kNoSuchCommand:
-      std::cout << "No such command" << std::endl;
+  Request request;
+  while (true) {
+    std::cout << "Write command ('help' to get command list)" << std::endl;
+    std::cin >> command_as_string;
+    auto command = CommandFromString(command_as_string);
+    switch (command) {
+      case kRegister:
+      case kLogin:
+        return MakeLoginRequest(command, id);
+      case kMessage:
+        return MakeMessageRequest(id, session_uuid, login);
+      case kPing:
+      case kLogOut:
+        return MakeLogoutRequest(command, id, session_uuid);
+      case kStop:
+        return {std::nullopt, std::nullopt, true};
+      case kHello:
+        return MakeHelloRequest(id);
+      case kHelp:
+        WriteCommandList();
+        break;
+      case kNoSuchCommand:
+        std::cout << "No such command" << std::endl;
+    }
   }
-  return {};
 }
 
-std::optional<std::string>
-ParseFromAnswerSessionUuid(const std::string &response) {
+Response ParseResponse(const std::string &response) {
   Json answer;
   try {
     answer = Json::parse(response);
@@ -196,7 +204,8 @@ ParseFromAnswerSessionUuid(const std::string &response) {
               << "\n";
   }
   ParseMessage(answer);
-  return ParseCommand(answer);
+  auto parsed_response = ParseCommand(answer);
+  return parsed_response;
 }
 
 } // namespace talker_helper

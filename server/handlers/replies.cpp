@@ -181,9 +181,8 @@ Response WriteBadRequest(server::Server::ClientTalker &client,
   if (id) {
     resp.push_back({"id", *id});
   }
-  if (command) {
-    resp.push_back({"command", request::CommandAsString(*command)});
-  }
+  resp.push_back({"command", request::CommandAsString(
+      command.value_or(request::kNoSuchCommand))});
   client.DoWrite(resp.dump() + "\n");
   return response;
 }
@@ -208,7 +207,8 @@ Response ManageMessage(const Json &data, server::Server::ClientTalker &client) {
                   {request_part->id, request_part->command, *body, *session_id,
                    *sender_login}, client);
             }
-            return WriteBadRequest(client, request_part->id, request_part->command);
+            return WriteBadRequest(client, request_part->id,
+                                   request_part->command);
           }
           return OnSendMessage(
               {request_part->id, request_part->command, *body, *session_id},

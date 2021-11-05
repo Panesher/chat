@@ -26,13 +26,19 @@ public:
 
     [[nodiscard]] std::string GetLogin() const;
 
-    void TryRead();
+    bool TryRead();
 
     bool IsStarted() const;
 
     bool IsConnected() const;
 
+    void DoRead();
+
+    void Run();
+
   private:
+    void OnRead(const boost::system::error_code &error, size_t bytes_count);
+
     std::optional<std::string> ParseFromAnswerSessionUuid();
 
     void DoWrite(const std::string &msg);
@@ -40,7 +46,7 @@ public:
     size_t ReadComplete(const boost::system::error_code &err, size_t bytes);
 
     bool connected_ = false;
-    int id_transaction_ = 1;
+    int id_transaction_ = 0;
     enum { max_msg = 1024 };
     boost::asio::io_service service_;
     boost::asio::ip::tcp::socket socket_;

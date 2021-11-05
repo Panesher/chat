@@ -122,6 +122,9 @@ void Server::ClientTalker::OnRead(const ErrorCode &error, size_t bytes_count) {
 
   std::string message(read_buffer_, bytes_count);
   ParseMessage(message);
+  if (!login_.empty()) {
+    std::cout << login_ << std::endl;
+  }
 }
 
 void Server::ClientTalker::Stop() {
@@ -167,6 +170,7 @@ response::Response Server::ClientTalker::LogIn(const std::string &login,
     return response;
   }
   login_ = login;
+  std::cout << "login_ = " << login_ << std::endl;
   return {response::kOk};
 }
 

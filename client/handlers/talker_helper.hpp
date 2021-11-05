@@ -9,10 +9,14 @@ struct Request {
   bool is_stop = false;
 };
 
+struct Response {
+  std::optional<std::string> session_uuid;
+  bool is_message = true;
+};
+
 Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
                     const std::optional<std::string> &login);
 
-std::optional<std::string>
-ParseFromAnswerSessionUuid(const std::string &response);
+Response ParseResponse(const std::string &response);
 
 } // namespace talker_helper
