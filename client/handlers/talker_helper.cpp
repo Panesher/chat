@@ -15,9 +15,9 @@ using namespace lib_basics::request;
 using Json = nlohmann::json;
 
 const std::string kBadRequestAsString = "bad request";
-const std::vector<std::string> kKeysForParsing = {
-    "id", "command", "status", "message", "client_id", "session"
-};
+const std::vector<std::string> kKeysForParsing = {"id", "command", "status",
+                                                  "message", "client_id",
+                                                  "session"};
 const size_t min_login_length = 4;
 
 Request WriteCommandList() {
@@ -42,12 +42,14 @@ Request MakeLoginRequest(const Command &command, int id) {
               << std::endl;
     std::cin >> login;
   }
-  while ((password.size() < min_login_length) && ((++counter_bad_requests) < 5)) {
+  while ((password.size() < min_login_length) &&
+         ((++counter_bad_requests) < 5)) {
     std::cout << "Write password at least " << min_login_length << " symbols"
               << std::endl;
     std::cin >> password;
   }
-  if ((login.size() < min_login_length) || (password.size() < min_login_length)) {
+  if ((login.size() < min_login_length) ||
+      (password.size() < min_login_length)) {
     std::cout << "To many bad requests" << std::endl;
     return {};
   }
@@ -120,8 +122,7 @@ void ParseMessage(const Json &answer) {
   std::cout << ": " << *message;
 }
 
-std::optional<std::string>
-MakeStringFromKeys(const Json &answer) {
+std::optional<std::string> MakeStringFromKeys(const Json &answer) {
   std::string out;
   int counter = 0;
   for (const auto &key: kKeysForParsing) {
@@ -135,16 +136,23 @@ MakeStringFromKeys(const Json &answer) {
   return "Response from server:\n" + out;
 }
 
-void ParseCommand(const Json &answer) {
+std::optional<std::string>
+ParseCommand(const Json &answer) {
   if (auto out = MakeStringFromKeys(answer)) {
     std::cout << *out;
   }
+  if (auto session_uuid = parcer_helper::ParseString(answer, "session")) {
+    // status always Ok if session returned
+    return session_uuid;
+  }
+  return {};
 }
 
 } // namespace
 
 Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
-                    const std::optional<std::string> &login) {
+                    const std::optional<std::string> &login,
+                    std::optional<int> &id_login) {
   std::string command_as_string;
   std::cout << "Write command ('help' to get command list)" << std::endl;
   std::cin >> command_as_string;
@@ -161,7 +169,7 @@ Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
     case kLogOut:
       return MakeLogoutRequest(command, id, session_uuid);
     case kStop:
-      return {std::nullopt, true};
+      return {std::nullopt, std::nullopt, true};
     case kHello:
       return MakeHelloRequest(id);
     case kNoSuchCommand:
@@ -170,7 +178,8 @@ Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
   return {};
 }
 
-void ParseAnswer(const std::string &response) {
+std::optional<std::string>
+ParseFromAnswerSessionUuid(const std::string &response) {
   Json answer;
   try {
     answer = Json::parse(response);
@@ -179,7 +188,7 @@ void ParseAnswer(const std::string &response) {
               << "\n";
   }
   ParseMessage(answer);
-  ParseCommand(answer);
+  return ParseCommand(answer);
 }
 
 } // namespace talker_helper

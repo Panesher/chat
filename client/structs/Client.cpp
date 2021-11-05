@@ -21,7 +21,7 @@ void Client::Run() {
       std::cout << "service stopped" << std::endl;
       return;
     }
-    talker_.DoRead();
+    talker_.TryRead();
   }
 }
 
@@ -41,6 +41,7 @@ void Client::Talker::Connect(ip::tcp::endpoint ep) {
 }
 
 bool Client::Talker::TryDoRequest() {
+  ++id_transaction_;
   if (!connected_) {
     std::cout << "Connect to server before you do requests" << std::endl;
   }
@@ -50,6 +51,9 @@ bool Client::Talker::TryDoRequest() {
     std::cout << "stop client" << std::endl;
     started_ = true;
     return false;
+  }
+  if (request.login) {
+    possible_login_ = login_;
   }
   if (request.message || connected_) {
     DoWrite(*request.message);
@@ -63,27 +67,30 @@ std::string Client::Talker::GetLogin() const {
   return *login_;
 }
 
-void Client::Talker::DoRead() {
+void Client::Talker::TryRead() {
   if (!connected_) {
     return;
   }
   already_read_ = 0;
   read(socket_, buffer(buff_),
        boost::bind(&Client::Talker::ReadComplete, this, _1, _2));
-  ParseAnswer();
+  if (auto session = ParseFromAnswerSessionUuid()) {
+    session_uuid_ = session;
+    login_ = possible_login_;
+  }
 }
 
-void Client::Talker::ParseAnswer() {
+std::optional<std::string> Client::Talker::ParseFromAnswerSessionUuid() {
   std::string message_serv(buff_, already_read_);
   if (message_serv.empty()) {
-    return;
+    return {};
   }
   std::cout << " Message got from server : " << message_serv;
   if (login_) {
     std::cout << " for " << *login_;
   }
   std::cout << std::endl;
-  talker_helper::ParseAnswer(message_serv);
+  return talker_helper::ParseFromAnswerSessionUuid(message_serv);
 }
 
 void Client::Talker::DoWrite(const std::string &msg) {

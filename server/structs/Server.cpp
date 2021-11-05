@@ -160,7 +160,7 @@ std::string Server::ClientTalker::GetUsername() const {
 response::Response Server::ClientTalker::LogIn(const std::string &login,
                                                const std::string &password) {
   if (!login_.empty()) {
-    return {response::kBadRequest};
+    return {response::kStateMismatch};
   }
   auto response = IsPasswordCorrect(login, password);
   if (response.status != response::kOk) {
@@ -174,8 +174,8 @@ void Server::ClientTalker::OnWrite(const ErrorCode &error, size_t bytes_count) {
   DoRead();
 }
 
-response::Response Server::ClientTalker::InsertUser(const std::string &login,
-                                                    const std::string &password) {
+response::Response Server::ClientTalker::InsertUser(
+    const std::string &login, const std::string &password) {
   return my_server_->InsertUser(login, password);
 }
 

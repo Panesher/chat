@@ -26,14 +26,12 @@ public:
 
     [[nodiscard]] std::string GetLogin() const;
 
-    void DoRead();
+    void TryRead();
 
     bool IsStarted() const;
 
   private:
-    void WriteRequest(const std::string &);
-
-    void ParseAnswer();
+    std::optional<std::string> ParseFromAnswerSessionUuid();
 
     void DoWrite(const std::string &msg);
 
@@ -49,6 +47,7 @@ public:
     bool started_;
     std::optional<std::string> login_;
     std::optional<std::string> session_uuid_;
+    std::optional<std::string> possible_login_;
   };
 
 private:
