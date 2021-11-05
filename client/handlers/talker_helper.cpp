@@ -30,7 +30,7 @@ Request WriteCommandList() {
          " sender login\n"
          "'ping' - ping server. No need to other fields\n"
          "'stop' - stop client. No need to other fields\n"
-         "'help' - help. No need to other fields" << std::endl;
+         "'help' - list of commands. No need to other fields" << std::endl;
   return {};
 }
 
