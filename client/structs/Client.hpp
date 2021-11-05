@@ -59,7 +59,6 @@ public:
   };
 
 private:
-  bool is_service_run_;
   Talker talker_;
 };
 } // namespace client

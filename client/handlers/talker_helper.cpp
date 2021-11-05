@@ -156,6 +156,11 @@ Response ParseCommand(const Json &answer) {
     // successfully login if session returned
     response.session_uuid = session_uuid;
   }
+  if (auto command = parcer_helper::ParseString(answer, "command")) {
+    if (CommandFromString(*command) == kLogOutReply) {
+      response.is_connected = false;
+    }
+  }
   return response;
 }
 
@@ -185,7 +190,7 @@ Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
       case kHelp:
         WriteCommandList();
         break;
-      case kNoSuchCommand:
+      default:
         std::cout << "No such command" << std::endl;
     }
   }
@@ -196,8 +201,8 @@ Response ParseResponse(const std::string &response) {
   try {
     answer = Json::parse(response);
   } catch (const nlohmann::detail::parse_error &ex) {
-    std::cerr << "Parse error : " << response << " cant be parsed to json"
-              << "\n";
+//    std::cerr << "Parse error : " << response << " cant be parsed to json"
+//              << "\n";
   }
   ParseMessage(answer);
   return ParseCommand(answer);

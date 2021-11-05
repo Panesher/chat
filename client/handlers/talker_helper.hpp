@@ -12,6 +12,7 @@ struct Request {
 struct Response {
   std::optional<std::string> session_uuid;
   bool is_message = true;
+  bool is_connected = true;
 };
 
 Request MakeRequest(int id, const std::optional<std::string> &session_uuid,

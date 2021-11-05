@@ -15,6 +15,9 @@ enum Command {
   kHelp,
   kStop,
   kNoSuchCommand,
+  kLogOutReply,
+  kMessageReply,
+  kPingReply,
 };
 
 namespace {
@@ -28,7 +31,10 @@ const std::unordered_map<Command, std::string> kCommandMap = {
     {kLogOut,        "logout"},
     {kStop,          "stop"},
     {kHelp,          "help"},
-    {kNoSuchCommand, "no_such_command"}
+    {kNoSuchCommand, "no_such_command"},
+    {kLogOutReply, "logout_reply"},
+    {kMessageReply, "no_such_command"},
+    {kPingReply, "message_reply"},
 };
 
 const std::unordered_map<std::string, Command> kCommandMapReversed = {
@@ -39,7 +45,11 @@ const std::unordered_map<std::string, Command> kCommandMapReversed = {
     {"register", kRegister},
     {"stop",     kStop},
     {"help",     kHelp},
-    {"logout",   kLogOut}
+    {"logout",   kLogOut},
+    {"no_such_command", kNoSuchCommand},
+    {"logout_reply", kLogOutReply},
+    {"no_such_command", kMessageReply},
+    {"message_reply", kPingReply},
 };
 
 } // namespace

@@ -149,10 +149,10 @@ Response OnLogOut(const request::RequestLogOut &request,
                         {"message", response.AsString()}}.dump() + "\n");
     return response;
   }
-  client->Stop();
   client->DoWrite(Json{{"id",      request.id},
                       {"command", "logout_reply"},
                       {"status",  "ok"}}.dump() + "\n");
+  client->Stop();
   return {kOk};
 }
 

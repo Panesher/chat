@@ -10,18 +10,20 @@ namespace {
 using namespace boost::asio;
 } // namespace
 
-Client::Client() : talker_(), is_service_run_(false) {}
+Client::Client() : talker_() {}
 
 void Client::Run() {
-  is_service_run_ = talker_.IsConnected();
-  while (is_service_run_) {
+  while (true) {
     talker_.TryDoRequest();
-    is_service_run_ = talker_.IsStarted();
-    if (!is_service_run_) {
+    if (!talker_.IsConnected() || !talker_.IsStarted()) {
       std::cout << "service stopped" << std::endl;
       return;
     }
     talker_.TryRead();
+    if (!talker_.IsConnected() || !talker_.IsStarted()) {
+      std::cout << "service stopped" << std::endl;
+      return;
+    }
   }
 }
 
@@ -53,12 +55,11 @@ bool Client::Talker::TryDoRequest() {
   if (!connected_) {
     std::cout << "Connect to server before you do requests" << std::endl;
   }
-  ++id_transaction_;
-  auto request = talker_helper::MakeRequest(id_transaction_, session_uuid_,
+  auto request = talker_helper::MakeRequest(++id_transaction_, session_uuid_,
                                             login_);
   if (request.is_stop) {
     std::cout << "stop client" << std::endl;
-    started_ = false;
+    connected_ = false;
     return false;
   }
   if (request.login) {
@@ -123,12 +124,13 @@ std::optional<std::string> Client::Talker::ParseFromAnswerSessionUuid() {
   if (message_serv.empty()) {
     return {};
   }
-  std::cout << "Message got from server : " << message_serv;
-  if (login_) {
-    std::cout << " for " << *login_;
-  }
-  std::cout << std::endl;
+//  std::cout << "Message got from server : " << message_serv;
+//  if (login_) {
+//    std::cout << " for " << *login_;
+//  }
+//  std::cout << std::endl;
   auto response = talker_helper::ParseResponse(message_serv);
+  connected_ = response.is_connected;
   if (response.is_message) {
     TryRead();
     return std::nullopt;
@@ -143,7 +145,7 @@ void Client::Talker::DoWrite(const std::string &msg) {
   if (login_) {
     std::cout << *login_ << " ";
   }
-  std::cout << "send to server : " << msg << std::endl;
+//  std::cout << "send to server : " << msg << std::endl;
   socket_.write_some(buffer(msg));
 }
 
@@ -159,15 +161,6 @@ size_t Client::Talker::ReadComplete(const boost::system::error_code &err,
   }
   // we read one-by-one until we get to enter, no buffering
   return found ? 0 : 1;
-//  if (bytes > 1000) {
-//    return 1;
-//  }
-//  already_read_ = bytes;
-//  int left = std::count(buff_, buff_ + already_read_, '{');
-//  int right = std::count(buff_, buff_ + already_read_, '}');
-//  bool found = left == right && left != 0;
-//
-//  return found ? 0 : 1;
 }
 
 } // namespace client
