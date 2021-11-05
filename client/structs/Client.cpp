@@ -37,23 +37,29 @@ void Client::Connect(ip::tcp::endpoint ep) {
   talker_.Connect(std::move(ep));
 }
 
-Client::Talker::Talker() : socket_(service_), started_(true) {}
+Client::Talker::Talker() : socket_(service_), started_(true) {
+}
 
 void Client::Talker::Connect(ip::tcp::endpoint ep) {
-  socket_.connect(ep);
+  try {
+    socket_.connect(ep);
+  } catch (const boost::exception& e) {
+    std::cout << "Can't connect to server" << std::endl;
+    return;
+  }
   connected_ = true;
 }
 
 bool Client::Talker::TryDoRequest() {
-  ++id_transaction_;
   if (!connected_) {
     std::cout << "Connect to server before you do requests" << std::endl;
   }
-  auto request = talker_helper::MakeRequest(id_transaction_++, session_uuid_,
+  ++id_transaction_;
+  auto request = talker_helper::MakeRequest(id_transaction_, session_uuid_,
                                             login_);
   if (request.is_stop) {
     std::cout << "stop client" << std::endl;
-    started_ = true;
+    started_ = false;
     return false;
   }
   if (request.login) {
@@ -67,7 +73,9 @@ bool Client::Talker::TryDoRequest() {
 }
 
 std::string Client::Talker::GetLogin() const {
-  if (!login_) return "";
+  if (!login_) {
+    return "";
+  }
   return *login_;
 }
 

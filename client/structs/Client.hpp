@@ -41,9 +41,9 @@ public:
 
     bool connected_ = false;
     int id_transaction_ = 1;
-    boost::asio::ip::tcp::socket socket_;
-    boost::asio::io_service service_;
     enum { max_msg = 1024 };
+    boost::asio::io_service service_;
+    boost::asio::ip::tcp::socket socket_;
     int already_read_;
     char buff_[max_msg];
     bool started_;
