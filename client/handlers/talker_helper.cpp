@@ -170,30 +170,29 @@ Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
                     const std::optional<std::string> &login) {
   std::string command_as_string;
   Request request;
-  while (true) {
-    std::cout << "Write command ('help' to get command list)" << std::endl;
-    std::cin >> command_as_string;
-    auto command = CommandFromString(command_as_string);
-    switch (command) {
-      case kRegister:
-      case kLogin:
-        return MakeLoginRequest(command, id);
-      case kMessage:
-        return MakeMessageRequest(id, session_uuid, login);
-      case kPing:
-      case kLogOut:
-        return MakeLogoutRequest(command, id, session_uuid);
-      case kStop:
-        return {std::nullopt, std::nullopt, true};
-      case kHello:
-        return MakeHelloRequest(id);
-      case kHelp:
-        WriteCommandList();
-        break;
-      default:
-        std::cout << "No such command" << std::endl;
-    }
+  std::cout << "Write command ('help' to get command list)" << std::endl;
+  std::cin >> command_as_string;
+  auto command = CommandFromString(command_as_string);
+  switch (command) {
+    case kRegister:
+    case kLogin:
+      return MakeLoginRequest(command, id);
+    case kMessage:
+      return MakeMessageRequest(id, session_uuid, login);
+    case kPing:
+    case kLogOut:
+      return MakeLogoutRequest(command, id, session_uuid);
+    case kStop:
+      return {std::nullopt, std::nullopt, true};
+    case kHello:
+      return MakeHelloRequest(id);
+    case kHelp:
+      WriteCommandList();
+      break;
+    default:
+      std::cout << "No such command" << std::endl;
   }
+  return {};
 }
 
 Response ParseResponse(const std::string &response) {

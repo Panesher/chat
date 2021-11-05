@@ -51,7 +51,7 @@ void Client::Talker::Connect(const ip::tcp::endpoint& ep) {
   connected_ = true;
 }
 
-bool Client::Talker::TryDoRequest() {
+void Client::Talker::TryDoRequest() {
   if (!connected_) {
     std::cout << "Connect to server before you do requests" << std::endl;
   }
@@ -59,16 +59,16 @@ bool Client::Talker::TryDoRequest() {
                                             login_);
   if (request.is_stop) {
     connected_ = false;
-    return false;
+    return;
   }
   if (request.login) {
     possible_login_ = request.login;
   }
-  if (request.message || connected_) {
+  if (request.message && connected_) {
     DoWrite(*request.message);
-    return true;
+    return;
   }
-  return false;
+  return TryDoRequest(); // tail recursion
 }
 
 std::string Client::Talker::GetLogin() const {

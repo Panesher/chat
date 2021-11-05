@@ -22,7 +22,7 @@ public:
 
     void Connect(const boost::asio::ip::tcp::endpoint&);
 
-    bool TryDoRequest();
+    void TryDoRequest();
 
     [[nodiscard]] std::string GetLogin() const;
 
