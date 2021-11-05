@@ -2,6 +2,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
 #include <iostream>
@@ -96,7 +97,7 @@ public:
     char write_buffer_[kBufferSize];
     std::string session_uuid_;
     std::string login_;
-    std::mutex mutex_;
+    boost::mutex mutex_;
 
     void OnRead(const ErrorCode &error, size_t bytes_count);
 

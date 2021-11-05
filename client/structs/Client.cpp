@@ -1,6 +1,7 @@
 #include <Client.hpp>
 
 #include <boost/thread.hpp>
+#include <boost/chrono.hpp>
 #include <iostream>
 #include <talker_helper.hpp>
 
@@ -9,6 +10,7 @@ namespace client {
 namespace {
 using namespace boost::asio;
 const std::string kEndOfFile = "read: End of file";
+const int kPingSleepMS = 500;
 } // namespace
 
 Client::Client() : talker_() {}
@@ -43,6 +45,7 @@ void Client::RunPing() try {
     return;
   }
   while (true) {
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(kPingSleepMS));
     if (!talker_.IsLogedIn()) {
       continue;
     }

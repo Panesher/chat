@@ -1,3 +1,4 @@
+#include <boost/thread/mutex.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -15,7 +16,7 @@ namespace storages {
 class UsersTable {
 private:
   std::unordered_map<std::string, std::string> users_;
-  std::mutex mutex_;
+  boost::mutex mutex_;
 
   friend server::Server;
 
@@ -36,7 +37,7 @@ class MessageTable {
 private:
   std::unordered_map<int, std::string> table_messages_;
   std::unordered_map<std::string, std::vector<int>> table_unreaded_messages_;
-  std::mutex mutex_;
+  boost::mutex mutex_;
   int max_id_ = 0;
 
 public:
