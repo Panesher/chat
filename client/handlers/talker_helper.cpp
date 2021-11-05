@@ -4,7 +4,6 @@
 
 #include <json.hpp>
 #include <Request.hpp>
-#include <Response.hpp>
 #include <parcer_helper.hpp>
 
 namespace talker_helper {
@@ -86,7 +85,7 @@ MakeMessageRequest(int id, const std::optional<std::string> &session_uuid,
 
   if (ans == 'y') {
     if (!login) {
-      std::cout << "There no login sending without login? (y/n)" << std::endl;
+      std::cout << "There no login. Sending without login? (y/n)" << std::endl;
       std::cin >> ans;
       if (ans == 'n') {
         return {};
