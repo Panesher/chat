@@ -5,6 +5,7 @@
 #include <json.hpp>
 #include <Request.hpp>
 #include <parcer_helper.hpp>
+#include <Response.hpp>
 
 namespace talker_helper {
 
@@ -148,6 +149,19 @@ std::optional<std::string> MakeStringFromKeys(const Json &answer) {
   return "Response from server:\n" + out;
 }
 
+bool IsLogout(const Json &answer) {
+  if (auto command = parcer_helper::ParseString(answer, "command")) {
+    if (CommandFromString(*command) == kLogOutReply) {
+      if (auto status = parcer_helper::ParseString(answer, "status")) {
+        if (response::Response{response::kOk}.AsString() == *status) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
 Response ParseCommand(const Json &answer) {
   Response response;
   if (auto out = MakeStringFromKeys(answer)) {
@@ -158,11 +172,8 @@ Response ParseCommand(const Json &answer) {
     // successfully login if session returned
     response.session_uuid = session_uuid;
   }
-  if (auto command = parcer_helper::ParseString(answer, "command")) {
-    if (CommandFromString(*command) == kLogOutReply) {
-      response.is_connected = false;
-    }
-  }
+  response.is_connected = IsLogout(answer);
+
   return response;
 }
 
@@ -201,10 +212,7 @@ Response ParseResponse(const std::string &response) {
   Json answer;
   try {
     answer = Json::parse(response);
-  } catch (const nlohmann::detail::parse_error &ex) {
-//    std::cerr << "Parse error : " << response << " cant be parsed to json"
-//              << "\n";
-  }
+  } catch (const nlohmann::detail::parse_error &ex) {}
   ParseMessage(answer);
   return ParseCommand(answer);
 }

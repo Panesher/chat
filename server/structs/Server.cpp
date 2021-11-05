@@ -105,8 +105,8 @@ size_t Server::ClientTalker::IsReadComplete(const ErrorCode &error,
     return 0;
   }
 
-  int left = std::count(read_buffer_, read_buffer_ + bytes_count, '{');
-  int right = std::count(read_buffer_, read_buffer_ + bytes_count, '}');
+  size_t left = std::count(read_buffer_, read_buffer_ + bytes_count, '{');
+  size_t right = std::count(read_buffer_, read_buffer_ + bytes_count, '}');
   bool found = left == right && left != 0;
 
   return found ? 0 : 1;
@@ -191,8 +191,8 @@ void Server::ClientTalker::OnWrite(const ErrorCode &error, size_t bytes_count) {
   DoRead();
 }
 
-response::Response Server::ClientTalker::InsertUser(
-    const std::string &login, const std::string &password) {
+response::Response Server::ClientTalker::InsertUser(const std::string &login,
+                                                    const std::string &password) {
   return my_server_->InsertUser(login, password);
 }
 
