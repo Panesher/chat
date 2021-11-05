@@ -15,9 +15,9 @@ using namespace lib_basics::request;
 using Json = nlohmann::json;
 
 const std::string kBadRequestAsString = "bad request";
-const std::vector<std::string> kKeysForParsing = {"id", "command", "status",
-                                                  "message", "client_id",
-                                                  "session"};
+const std::vector<std::string> kKeysForParsingStrings = {"command", "status",
+                                                         "message", "session"};
+const std::vector<std::string> kKeysForParsingInts = {"id", "client_id"};
 const size_t min_login_length = 4;
 
 Request WriteCommandList() {
@@ -111,23 +111,34 @@ Request MakeHelloRequest(int id) {
 }
 
 void ParseMessage(const Json &answer) {
+  if (auto command = parcer_helper::ParseString(answer, "command")) {
+    return;
+  }
   auto message = parcer_helper::ParseString(answer, "message");
   if (!message) {
     return;
   }
-  std::cout << "You got message ";
+  std::cout << "You got message";
   if (auto sender_login = parcer_helper::ParseString(answer, "sender_login")) {
     std::cout << " from " << *sender_login;
   }
-  std::cout << ": " << *message;
+  std::cout << ": " << *message << std::endl;
 }
 
 std::optional<std::string> MakeStringFromKeys(const Json &answer) {
   std::string out;
   int counter = 0;
-  for (const auto &key: kKeysForParsing) {
+  for (const auto &key: kKeysForParsingStrings) {
     if (auto value = parcer_helper::ParseString(answer, key)) {
-      out += "  " + key + ": " + *value + "'\n";
+      out += "  " + key + ": '" + *value + "'\n";
+    }
+    if (++counter > 2 && out.empty()) {
+      return {};
+    }
+  }
+  for (const auto &key: kKeysForParsingInts) {
+    if (auto value = parcer_helper::ParseInt(answer, key)) {
+      out += "  " + key + ": '" + std::to_string(*value) + "'\n";
     }
     if (++counter > 2 && out.empty()) {
       return {};
@@ -136,8 +147,7 @@ std::optional<std::string> MakeStringFromKeys(const Json &answer) {
   return "Response from server:\n" + out;
 }
 
-std::optional<std::string>
-ParseCommand(const Json &answer) {
+std::optional<std::string> ParseCommand(const Json &answer) {
   if (auto out = MakeStringFromKeys(answer)) {
     std::cout << *out;
   }

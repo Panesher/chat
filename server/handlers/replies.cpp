@@ -54,14 +54,14 @@ Response OnAuthorization(const request::RequestAuthorization &request,
   auto response = client.LogIn(request.login, request.password);
   if (response.status == kOk) {
     client.DoWrite(Json{{"id",      request.id},
-                        {"command", request.command},
+                        {"command", CommandAsString(request.command)},
                         {"status",  "ok"},
                         {"session", client.GetSessionUuid()}}.dump() + "\n");
     client.DoWriteAllUnreadedMesseges();
     return response;
   }
   client.DoWrite(Json{{"id",      request.id},
-                      {"command", request.command},
+                      {"command", CommandAsString(request.command)},
                       {"status",  "failed"},
                       {"message", response.AsString()}}.dump() + "\n");
   return response;
@@ -73,13 +73,13 @@ Response OnRegister(const request::RequestRegister &request,
   auto response = client.InsertUser(request.login, request.password);
   if (response.status == kOk) {
     client.DoWrite(Json{{"id",      request.id},
-                        {"command", request.command},
+                        {"command", CommandAsString(request.command)},
                         {"status",  "ok"},
                         {"message", "Now you can log in"}}.dump() + "\n");
     return response;
   }
   client.DoWrite(Json{{"id",      request.id},
-                      {"command", request.command},
+                      {"command", CommandAsString(request.command)},
                       {"status",  "failed"},
                       {"message", response.AsString()}}.dump() + "\n");
   return response;

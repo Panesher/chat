@@ -7,7 +7,7 @@ namespace parcer_helper {
 
 bool IsContain(const nlohmann::json &data, const std::string &key) {
   if (!data.contains(key)) {
-    std::cerr << "Parse error : There is no key \"" << key << "\n";
+//    std::cerr << "Parse error : There is no key \"" << key << "\n";
     return false;
   }
   return true;
@@ -23,8 +23,8 @@ ParseString(const nlohmann::json &data, const std::string &key) {
     data.at(key).get_to(res);
     return res;
   } catch (const nlohmann::detail::type_error &ex) {
-    std::cerr << "Parse error : " << key << " " << data[key]
-              << " cant be parsed as string" << "\n";
+//    std::cerr << "Parse error : " << key << " " << data[key]
+//              << " cant be parsed as string" << "\n";
     return {};
   }
 }
@@ -39,8 +39,8 @@ ParseInt(const nlohmann::json &data, const std::string &key) {
     data.at(key).get_to(res);
     return res;
   } catch (const nlohmann::detail::type_error &ex) {
-    std::cerr << "Parse error : " << key << " " << data[key]
-              << " cant be parsed as integer" << "\n";
+//    std::cerr << "Parse error : " << key << " " << data[key]
+//              << " cant be parsed as integer" << "\n";
     return {};
   }
 }

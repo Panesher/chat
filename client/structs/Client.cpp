@@ -106,6 +106,9 @@ std::optional<std::string> Client::Talker::ParseFromAnswerSessionUuid() {
 }
 
 void Client::Talker::DoWrite(const std::string &msg) {
+  if (msg.empty()) {
+    return;
+  }
   if (login_) {
     std::cout << *login_ << " ";
   }
