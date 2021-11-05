@@ -15,6 +15,9 @@ struct Response {
   bool is_connected = true;
 };
 
+Request MakePingRequest(const std::string &command, int id,
+                        const std::optional<std::string> &session_uuid);
+
 Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
                     const std::optional<std::string> &login);
 

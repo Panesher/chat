@@ -4,6 +4,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
+#include <mutex>
 #include <string>
 
 namespace client {
@@ -32,6 +33,10 @@ public:
 
     void Disconnect();
 
+    void DoPing();
+
+    bool IsLogedIn() const;
+
   private:
     bool ParseResponse();
 
@@ -49,9 +54,12 @@ public:
     std::optional<std::string> login_;
     std::optional<std::string> session_uuid_;
     std::optional<std::string> possible_login_;
+    std::mutex mutex_;
   };
 
 private:
+  void RunPing();
+
   Talker talker_;
 };
 } // namespace client

@@ -63,17 +63,6 @@ Request MakeLoginRequest(const Command &command, int id) {
   return request;
 }
 
-Request MakeLogoutRequest(const Command &command, int id,
-                          const std::optional<std::string> &session_uuid) {
-  if (!session_uuid) {
-    std::cout << "You should login before you log out" << std::endl;
-    return {};
-  }
-  return {(Json{{"id",      id},
-                {"command", CommandAsString(command)},
-                {"session", *session_uuid}}.dump()) + "\n"};
-}
-
 Request
 MakeMessageRequest(int id, const std::optional<std::string> &session_uuid,
                    const std::optional<std::string> &login) {
@@ -162,8 +151,24 @@ bool IsLogout(const Json &answer) {
   return true;
 }
 
+bool IsGoodPing(const Json &answer) {
+  if (auto command = parcer_helper::ParseString(answer, "command")) {
+    if (CommandFromString(*command) == kPing) {
+      if (auto status = parcer_helper::ParseString(answer, "status")) {
+        if (response::Response{response::kOk}.AsString() == *status) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 Response ParseCommand(const Json &answer) {
   Response response;
+  if (IsGoodPing(answer)) {
+    return {};
+  }
   if (auto out = MakeStringFromKeys(answer)) {
     response.is_message = false;
     std::cout << *out;
@@ -178,6 +183,17 @@ Response ParseCommand(const Json &answer) {
 }
 
 } // namespace
+
+Request MakePingRequest(const std::string &command, int id,
+                        const std::optional<std::string> &session_uuid) {
+  if (!session_uuid) {
+    std::cout << "You should login before you log out" << std::endl;
+    return {};
+  }
+  return {(Json{{"id",      id},
+                {"command", command},
+                {"session", *session_uuid}}.dump()) + "\n"};
+}
 
 Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
                     const std::optional<std::string> &login) {
@@ -194,7 +210,7 @@ Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
       return MakeMessageRequest(id, session_uuid, login);
     case kPing:
     case kLogOut:
-      return MakeLogoutRequest(command, id, session_uuid);
+      return MakePingRequest(CommandAsString(command), id, session_uuid);
     case kStop:
       return {std::nullopt, std::nullopt, true};
     case kHello:

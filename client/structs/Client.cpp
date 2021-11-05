@@ -38,6 +38,45 @@ void Client::Run() try {
   }
 }
 
+void Client::RunPing() try {
+  if (!talker_.IsConnected()) {
+    return;
+  }
+  while (true) {
+    if (!talker_.IsLogedIn()) {
+      continue;
+    }
+    talker_.DoPing();
+    if (!talker_.IsConnected()) {
+      return;
+    }
+    talker_.TryRead();
+    if (!talker_.IsConnected()) {
+      return;
+    }
+  }
+} catch (const boost::system::system_error &ex) {}
+
+void Client::Talker::DoPing() {
+  if (!connected_) {
+    return;
+  }
+  mutex_.lock();
+  ++id_transaction_;
+  mutex_.unlock();
+
+  auto request = talker_helper::MakePingRequest("ping", id_transaction_,
+                                                session_uuid_);
+  if (request.message && connected_) {
+    DoWrite(*request.message);
+    return;
+  }
+}
+
+bool Client::Talker::IsLogedIn() const {
+  return session_uuid_.has_value();
+}
+
 void Client::Talker::Disconnect() {
   connected_ = false;
   socket_.close();
@@ -54,21 +93,24 @@ void Client::Connect(ip::tcp::endpoint ep) {
 
 Client::Talker::Talker() : socket_(service_), already_read_(0), buff_() {}
 
-void Client::Talker::Connect(const ip::tcp::endpoint &ep) {
-  try {
-    socket_.connect(ep);
-  } catch (const boost::exception &e) {
-    std::cout << "Can't connect to server" << std::endl;
-    return;
-  }
+void Client::Talker::Connect(const ip::tcp::endpoint &ep) try {
+  socket_.connect(ep);
   connected_ = true;
+} catch (const boost::exception &e) {
+  std::cout << "Can't connect to server" << std::endl;
+  return;
 }
 
 void Client::Talker::TryDoRequest() {
   if (!connected_) {
     std::cout << "Connect to server before you do requests" << std::endl;
+    return;
   }
-  auto request = talker_helper::MakeRequest(++id_transaction_, session_uuid_,
+  mutex_.lock();
+  ++id_transaction_;
+  mutex_.unlock();
+
+  auto request = talker_helper::MakeRequest(id_transaction_, session_uuid_,
                                             login_);
   if (request.is_stop) {
     return Disconnect();
@@ -94,10 +136,11 @@ void Client::Talker::TryRead() {
   if (!connected_) {
     return;
   }
+  mutex_.lock();
   already_read_ = 0;
   read(socket_, buffer(buff_),
        boost::bind(&Client::Talker::IsReadComplete, this, _1, _2));
-
+  mutex_.unlock();
   if (ParseResponse()) {
     return TryRead(); // tail recursion
   }
@@ -130,8 +173,9 @@ void Client::Talker::DoWrite(const std::string &msg) {
   if (msg.empty()) {
     return;
   }
+  mutex_.lock();
   socket_.write_some(buffer(msg));
-  std::cout << "Request sent" << std::endl;
+  mutex_.unlock();
 }
 
 size_t Client::Talker::IsReadComplete(const boost::system::error_code &err,
