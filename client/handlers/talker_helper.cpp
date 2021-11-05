@@ -151,8 +151,7 @@ ParseCommand(const Json &answer) {
 } // namespace
 
 Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
-                    const std::optional<std::string> &login,
-                    std::optional<int> &id_login) {
+                    const std::optional<std::string> &login) {
   std::string command_as_string;
   std::cout << "Write command ('help' to get command list)" << std::endl;
   std::cin >> command_as_string;
