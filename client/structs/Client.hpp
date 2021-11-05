@@ -30,6 +30,8 @@ public:
 
     bool IsStarted() const;
 
+    bool IsConnected() const;
+
   private:
     std::optional<std::string> ParseFromAnswerSessionUuid();
 

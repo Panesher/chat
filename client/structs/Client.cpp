@@ -13,8 +13,8 @@ using namespace boost::asio;
 Client::Client() : talker_(), is_service_run_(false) {}
 
 void Client::Run() {
-  is_service_run_ = true;
-  while (true) {
+  is_service_run_ = talker_.IsConnected();
+  while (is_service_run_) {
     talker_.TryDoRequest();
     is_service_run_ = talker_.IsStarted();
     if (!is_service_run_) {
@@ -23,6 +23,10 @@ void Client::Run() {
     }
     talker_.TryRead();
   }
+}
+
+bool Client::Talker::IsConnected() const {
+  return connected_;
 }
 
 bool Client::Talker::IsStarted() const {
