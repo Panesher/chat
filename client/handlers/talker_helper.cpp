@@ -80,10 +80,12 @@ MakeMessageRequest(int id, const std::optional<std::string> &session_uuid,
     std::cout << "You should login before you send message" << std::endl;
     return {};
   }
-  std::string message;
+  std::string message, message_part_2;
   char ans;
   std::cout << "Write your message in one line" << std::endl;
-  std::getline(std::cin, message);
+  std::cin >> message;
+  std::getline(std::cin, message_part_2);
+  message += message_part_2;
   std::cout << "Do you want to add your login? (y/n)" << std::endl;
   std::cin >> ans;
 

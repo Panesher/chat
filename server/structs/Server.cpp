@@ -136,8 +136,13 @@ void Server::ClientTalker::Stop() {
 
 void Server::ClientTalker::ParseMessage(const std::string &message) {
   std::cout << "Got message : " << message << std::endl;
-  Json input = Json::parse(message);
-  replies::ManageMessage(input, shared_from_this()); // return Response
+  Json input;
+  try {
+    input = Json::parse(message);
+  } catch (const nlohmann::detail::parse_error &ex) {
+    std::cerr << "Parse error: " << ex.what() << std::endl;
+  }
+  replies::ManageMessage(input, shared_from_this());
 }
 
 void Server::ClientTalker::DoWrite(std::string message) {
