@@ -145,7 +145,7 @@ void Server::ClientTalker::ParseMessage(const std::string &message) {
   replies::ManageMessage(input, shared_from_this());
 }
 
-void Server::ClientTalker::DoWrite(std::string message) {
+void Server::ClientTalker::DoWrite(const std::string &message) {
   if (!started_) {
     return;
   }
@@ -155,6 +155,17 @@ void Server::ClientTalker::DoWrite(std::string message) {
   socket_.async_write_some(buffer(write_buffer_),
                            boost::bind(&Server::ClientTalker::OnWrite,
                                        shared_from_this(), _1, _2));
+  mutex_.unlock();
+}
+
+void Server::ClientTalker::DoWriteWothoutRead(const std::string &message) {
+  if (!started_) {
+    return;
+  }
+  mutex_.lock();
+  std::cout << "send message : " << message << std::endl;
+  std::copy(message.begin(), message.end(), write_buffer_);
+  socket_.write_some(buffer(write_buffer_));
   mutex_.unlock();
 }
 
@@ -200,9 +211,9 @@ void Server::ClientTalker::DoWriteAllUnreadedMesseges() {
   if (login_.empty()) {
     return;
   }
-  auto unreaded_messages = my_server_->message_table_.PopReciever(login_);
-  for (auto message: unreaded_messages) {
-    DoWrite(my_server_->message_table_.FindMessageById(message));
+  auto unread_messages = my_server_->message_table_.PopReciever(login_);
+  for (auto message: unread_messages) {
+    DoWriteWothoutRead(my_server_->message_table_.FindMessageById(message));
   }
 }
 
@@ -213,7 +224,7 @@ int Server::ClientTalker::DoWriteToAllOtherClients(const std::string &message) {
       continue;
     }
     logins_recived.insert(client->login_);
-    DoWrite(message);
+    DoWriteWothoutRead(message);
   }
   if (my_server_->user_table_.Size() <= logins_recived.size() + 1) {
     return my_server_->message_table_.IncreaseMaxId();

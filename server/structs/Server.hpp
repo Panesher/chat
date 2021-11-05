@@ -82,7 +82,9 @@ public:
     lib_basics::response::Response
     EraseUser(const std::string &login, const std::string &password);
 
-    void DoWrite(std::string message);
+    void DoWrite(const std::string &message);
+
+    void DoWriteWothoutRead(const std::string &message);
 
     bool IsAuthorizated() const;
 
