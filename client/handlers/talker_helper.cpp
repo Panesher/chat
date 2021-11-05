@@ -130,21 +130,17 @@ void ParseMessage(const Json &answer) {
 
 std::optional<std::string> MakeStringFromKeys(const Json &answer) {
   std::string out;
-  int counter = 0;
   for (const auto &key: kKeysForParsingStrings) {
     if (auto value = parcer_helper::ParseString(answer, key)) {
       out += "  " + key + ": '" + *value + "'\n";
     }
-    if (++counter > 2 && out.empty()) {
+    if (out.empty()) {
       return {};
     }
   }
   for (const auto &key: kKeysForParsingInts) {
     if (auto value = parcer_helper::ParseInt(answer, key)) {
       out += "  " + key + ": '" + std::to_string(*value) + "'\n";
-    }
-    if (++counter > 2 && out.empty()) {
-      return {};
     }
   }
   return "Response from server:\n" + out;
@@ -157,7 +153,7 @@ Response ParseCommand(const Json &answer) {
     std::cout << *out;
   }
   if (auto session_uuid = parcer_helper::ParseString(answer, "session")) {
-    // status always Ok if session returned
+    // successfully login if session returned
     response.session_uuid = session_uuid;
   }
   return response;
@@ -204,8 +200,7 @@ Response ParseResponse(const std::string &response) {
               << "\n";
   }
   ParseMessage(answer);
-  auto parsed_response = ParseCommand(answer);
-  return parsed_response;
+  return ParseCommand(answer);
 }
 
 } // namespace talker_helper

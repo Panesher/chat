@@ -84,7 +84,7 @@ public:
 
     void DoWrite(std::string message);
 
-    bool isAuthorizated() const;
+    bool IsAuthorizated() const;
 
   private:
     boost::shared_ptr<Server> my_server_;

@@ -30,37 +30,37 @@ std::optional<request::Request> ParseRequest(const Json &data) {
 }
 
 int
-SendMessageToAllMembers(server::Server::ClientTalker &client, std::string body,
+SendMessageToAllMembers(const server::Server::ClientPtr client, std::string body,
                         std::optional<std::string> login = std::nullopt) {
   Json message = {{"message", body}};
   if (login) {
     message.push_back({"sender_login", *login});
   }
-  return client.DoWriteToAllOtherClients(message.dump() + "\n");
+  return client->DoWriteToAllOtherClients(message.dump() + "\n");
 }
 
 Response OnHello(const request::RequestHello &request,
-                 server::Server::ClientTalker &client) {
+                 const server::Server::ClientPtr client) {
   std::cout << "Hello" << std::endl;
-  client.DoWrite(Json{{"id",          request.id},
+  client->DoWrite(Json{{"id",          request.id},
                       {"command",     "HELLO"},
                       {"auth_method", "plain-text"}}.dump() + "\n");
   return {kOk};
 }
 
 Response OnAuthorization(const request::RequestAuthorization &request,
-                         server::Server::ClientTalker &client) {
+                         const server::Server::ClientPtr client) {
   std::cout << "Authorization" << std::endl;
-  auto response = client.LogIn(request.login, request.password);
+  auto response = client->LogIn(request.login, request.password);
   if (response.status == kOk) {
-    client.DoWrite(Json{{"id",      request.id},
+    client->DoWriteAllUnreadedMesseges();
+    client->DoWrite(Json{{"id",      request.id},
                         {"command", CommandAsString(request.command)},
                         {"status",  "ok"},
-                        {"session", client.GetSessionUuid()}}.dump() + "\n");
-    client.DoWriteAllUnreadedMesseges();
+                        {"session", client->GetSessionUuid()}}.dump() + "\n");
     return response;
   }
-  client.DoWrite(Json{{"id",      request.id},
+  client->DoWrite(Json{{"id",      request.id},
                       {"command", CommandAsString(request.command)},
                       {"status",  "failed"},
                       {"message", response.AsString()}}.dump() + "\n");
@@ -68,17 +68,17 @@ Response OnAuthorization(const request::RequestAuthorization &request,
 }
 
 Response OnRegister(const request::RequestRegister &request,
-                    server::Server::ClientTalker &client) {
+                    const server::Server::ClientPtr client) {
   std::cout << "Register" << std::endl;
-  auto response = client.InsertUser(request.login, request.password);
+  auto response = client->InsertUser(request.login, request.password);
   if (response.status == kOk) {
-    client.DoWrite(Json{{"id",      request.id},
+    client->DoWrite(Json{{"id",      request.id},
                         {"command", CommandAsString(request.command)},
                         {"status",  "ok"},
                         {"message", "Now you can log in"}}.dump() + "\n");
     return response;
   }
-  client.DoWrite(Json{{"id",      request.id},
+  client->DoWrite(Json{{"id",      request.id},
                       {"command", CommandAsString(request.command)},
                       {"status",  "failed"},
                       {"message", response.AsString()}}.dump() + "\n");
@@ -86,24 +86,24 @@ Response OnRegister(const request::RequestRegister &request,
 }
 
 Response OnSendMessage(const request::RequestSendMessage &request,
-                       server::Server::ClientTalker &client) {
+                       const server::Server::ClientPtr client) {
   std::cout << "Send message" << std::endl;
   Response response = {kOk};
-  if (request.session_uuid != client.GetSessionUuid()) {
+  if (request.session_uuid != client->GetSessionUuid()) {
     response = {kStateMismatch};
   }
-  if (client.isAuthorizated()) {
+  if (!client->IsAuthorizated()) {
     response = {kUnauthorized};
   }
   if (response.status == kOk) {
     int client_id = SendMessageToAllMembers(client, request.body);
-    client.DoWrite(Json{{"id",        request.id},
+    client->DoWrite(Json{{"id",        request.id},
                         {"command",   "message_reply"},
                         {"status",    "ok"},
                         {"client_id", client_id}}.dump() + "\n");
     return response;
   }
-  client.DoWrite(Json{{"id",      request.id},
+  client->DoWrite(Json{{"id",      request.id},
                       {"command", "message_reply"},
                       {"status",  "failed"},
                       {"message", response.AsString()}}.dump() + "\n");
@@ -112,26 +112,26 @@ Response OnSendMessage(const request::RequestSendMessage &request,
 
 Response
 OnSendMessageFromServer(const request::RequestSendMessageFromServer &request,
-                        server::Server::ClientTalker &client) {
+                        const server::Server::ClientPtr client) {
   std::cout << "Send message with login" << std::endl;
   Response response = {kOk};
-  if (request.session_uuid != client.GetSessionUuid() ||
-      request.sender_login != client.GetUsername()) {
+  if (request.session_uuid != client->GetSessionUuid() ||
+      request.sender_login != client->GetUsername()) {
     response = {kStateMismatch};
   }
-  if (client.isAuthorizated()) {
+  if (!client->IsAuthorizated()) {
     response = {kUnauthorized};
   }
   if (response.status == kOk) {
     int client_id = SendMessageToAllMembers(client, request.body,
                                             request.sender_login);
-    client.DoWrite(Json{{"id",        request.id},
+    client->DoWrite(Json{{"id",        request.id},
                         {"command",   "message_reply"},
                         {"status",    "ok"},
                         {"client_id", client_id}}.dump() + "\n");
     return response;
   }
-  client.DoWrite(Json{{"id",      request.id},
+  client->DoWrite(Json{{"id",      request.id},
                       {"command", "message_reply"},
                       {"status",  "failed"},
                       {"message", response.AsString()}}.dump() + "\n");
@@ -139,41 +139,41 @@ OnSendMessageFromServer(const request::RequestSendMessageFromServer &request,
 }
 
 Response OnLogOut(const request::RequestLogOut &request,
-                  server::Server::ClientTalker &client) {
+                  const server::Server::ClientPtr client) {
   std::cout << "Log out" << std::endl;
-  if (request.session_uuid != client.GetSessionUuid()) {
+  if (request.session_uuid != client->GetSessionUuid()) {
     Response response = {kStateMismatch};
-    client.DoWrite(Json{{"id",      request.id},
+    client->DoWrite(Json{{"id",      request.id},
                         {"command", "logout_reply"},
                         {"status",  "failed"},
                         {"message", response.AsString()}}.dump() + "\n");
     return response;
   }
-  client.Stop();
-  client.DoWrite(Json{{"id",      request.id},
+  client->Stop();
+  client->DoWrite(Json{{"id",      request.id},
                       {"command", "logout_reply"},
                       {"status",  "ok"}}.dump() + "\n");
   return {kOk};
 }
 
 Response OnPing(const request::RequestPing &request,
-                server::Server::ClientTalker &client) {
+                const server::Server::ClientPtr client) {
   std::cout << "Ping" << std::endl;
-  if (request.session_uuid != client.GetSessionUuid()) {
+  if (request.session_uuid != client->GetSessionUuid()) {
     Response response = {kStateMismatch};
-    client.DoWrite(Json{{"id",      request.id},
+    client->DoWrite(Json{{"id",      request.id},
                         {"command", "ping_reply"},
                         {"status",  "failed"},
                         {"message", response.AsString()}}.dump() + "\n");
     return response;
   }
-  client.DoWrite(Json{{"id",      request.id},
+  client->DoWrite(Json{{"id",      request.id},
                       {"command", "ping_reply"},
                       {"status",  "ok"}}.dump() + "\n");
   return {kOk};
 }
 
-Response WriteBadRequest(server::Server::ClientTalker &client,
+Response WriteBadRequest(const server::Server::ClientPtr client,
                          const std::optional<int> &id = std::nullopt,
                          const std::optional<Command> &command = std::nullopt) {
   Response response = {kBadRequest};
@@ -183,13 +183,13 @@ Response WriteBadRequest(server::Server::ClientTalker &client,
   }
   resp.push_back({"command", request::CommandAsString(
       command.value_or(request::kNoSuchCommand))});
-  client.DoWrite(resp.dump() + "\n");
+  client->DoWrite(resp.dump() + "\n");
   return response;
 }
 
 } // namespace
 
-Response ManageMessage(const Json &data, server::Server::ClientTalker &client) {
+Response ManageMessage(const Json &data, const server::Server::ClientPtr client) {
   auto request_part = ParseRequest(data);
   if (!request_part) {
     return WriteBadRequest(client);

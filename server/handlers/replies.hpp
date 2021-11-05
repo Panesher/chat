@@ -7,6 +7,6 @@
 namespace replies {
 
 lib_basics::response::Response
-ManageMessage(const nlohmann::json &, server::Server::ClientTalker &);
+ManageMessage(const nlohmann::json &, const server::Server::ClientPtr);
 
 } // namespace replies

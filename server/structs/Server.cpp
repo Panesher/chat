@@ -122,9 +122,6 @@ void Server::ClientTalker::OnRead(const ErrorCode &error, size_t bytes_count) {
 
   std::string message(read_buffer_, bytes_count);
   ParseMessage(message);
-  if (!login_.empty()) {
-    std::cout << login_ << std::endl;
-  }
 }
 
 void Server::ClientTalker::Stop() {
@@ -140,7 +137,7 @@ void Server::ClientTalker::Stop() {
 void Server::ClientTalker::ParseMessage(const std::string &message) {
   std::cout << "Got message : " << message << std::endl;
   Json input = Json::parse(message);
-  replies::ManageMessage(input, *this); // return Response
+  replies::ManageMessage(input, shared_from_this()); // return Response
 }
 
 void Server::ClientTalker::DoWrite(std::string message) {
@@ -226,7 +223,7 @@ int Server::ClientTalker::DoWriteToAllOtherClients(const std::string &message) {
   return id;
 }
 
-bool Server::ClientTalker::isAuthorizated() const {
+bool Server::ClientTalker::IsAuthorizated() const {
   return !login_.empty();
 }
 
