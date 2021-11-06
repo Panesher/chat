@@ -32,8 +32,8 @@ const std::unordered_map<Command, std::string> kCommandMap = {
     {kHelp,          "help"},
     {kNoSuchCommand, "no_such_command"},
     {kLogOutReply, "logout_reply"},
-    {kMessageReply, "no_such_command"},
-    {kPingReply, "message_reply"},
+    {kMessageReply, "message_reply"},
+    {kPingReply, "ping_reply"},
 };
 
 const std::unordered_map<std::string, Command> kCommandMapReversed = {
@@ -47,8 +47,8 @@ const std::unordered_map<std::string, Command> kCommandMapReversed = {
     {"logout",   kLogOut},
     {"no_such_command", kNoSuchCommand},
     {"logout_reply", kLogOutReply},
-    {"no_such_command", kMessageReply},
-    {"message_reply", kPingReply},
+    {"message_reply", kMessageReply},
+    {"ping_reply", kPingReply},
 };
 
 } // namespace

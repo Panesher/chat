@@ -153,7 +153,7 @@ bool IsLogout(const Json &answer) {
 
 bool IsGoodPing(const Json &answer) {
   if (auto command = parcer_helper::ParseString(answer, "command")) {
-    if (CommandFromString(*command) == kPing) {
+    if (CommandFromString(*command) == kPingReply) {
       if (auto status = parcer_helper::ParseString(answer, "status")) {
         if (response::Response{response::kOk}.AsString() == *status) {
           return true;
@@ -167,7 +167,8 @@ bool IsGoodPing(const Json &answer) {
 Response ParseCommand(const Json &answer) {
   Response response;
   if (IsGoodPing(answer)) {
-    return {};
+    response.is_message = false;
+    return response;
   }
   if (auto out = MakeStringFromKeys(answer)) {
     response.is_message = false;

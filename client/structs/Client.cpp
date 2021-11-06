@@ -1,7 +1,8 @@
 #include <Client.hpp>
 
 #include <boost/thread.hpp>
-#include <boost/chrono.hpp>
+#include <chrono>
+#include <thread>
 #include <iostream>
 #include <talker_helper.hpp>
 
@@ -10,7 +11,7 @@ namespace client {
 namespace {
 using namespace boost::asio;
 const std::string kEndOfFile = "read: End of file";
-const int kPingSleepMS = 500;
+const int kPingSleepMS = 2'000;
 } // namespace
 
 Client::Client() : talker_() {}
@@ -20,14 +21,17 @@ void Client::Run() try {
     std::cout << "Connect to server before you do requests" << std::endl;
     return;
   }
+  boost::thread ping_thread([&]() { RunPing(); });
   while (true) {
     talker_.TryDoRequest();
     if (!talker_.IsConnected()) {
+      ping_thread.join();
       std::cout << "Service stopped." << std::endl;
       return;
     }
     talker_.TryRead();
     if (!talker_.IsConnected()) {
+      ping_thread.join();
       std::cout << "Service stopped." << std::endl;
       return;
     }
@@ -45,7 +49,7 @@ void Client::RunPing() try {
     return;
   }
   while (true) {
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(kPingSleepMS));
+    std::this_thread::sleep_for(std::chrono::milliseconds(kPingSleepMS));
     if (!talker_.IsLogedIn()) {
       continue;
     }
@@ -143,10 +147,11 @@ void Client::Talker::TryRead() {
   already_read_ = 0;
   read(socket_, buffer(buff_),
        boost::bind(&Client::Talker::IsReadComplete, this, _1, _2));
-  mutex_.unlock();
   if (ParseResponse()) {
+    mutex_.unlock();
     return TryRead(); // tail recursion
   }
+  mutex_.unlock();
 }
 
 bool Client::Talker::ParseResponse() {
