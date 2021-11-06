@@ -29,22 +29,22 @@ std::optional<request::Request> ParseRequest(const Json &data) {
   return request;
 }
 
-int
-SendMessageToAllMembers(const server::Server::ClientPtr client, std::string body,
-                        std::optional<std::string> login = std::nullopt) {
+int SendMessageToAllMembers(const server::Server::ClientPtr client,
+                            std::string body,
+                            std::optional<std::string> login = std::nullopt) {
   Json message = {{"message", body}};
   if (login) {
     message.push_back({"sender_login", *login});
   }
-  return client->DoWriteToAllOtherClients(message.dump() + "\n");
+  return client->DoWriteToAllOtherClients(message.dump());
 }
 
 Response OnHello(const request::RequestHello &request,
                  const server::Server::ClientPtr client) {
   std::cout << "Hello" << std::endl;
   client->DoWrite(Json{{"id",          request.id},
-                      {"command",     "HELLO"},
-                      {"auth_method", "plain-text"}}.dump() + "\n");
+                       {"command",     "HELLO"},
+                       {"auth_method", "plain-text"}}.dump());
   return {kOk};
 }
 
@@ -55,15 +55,15 @@ Response OnAuthorization(const request::RequestAuthorization &request,
   if (response.status == kOk) {
     client->DoWriteAllUnreadedMesseges();
     client->DoWrite(Json{{"id",      request.id},
-                        {"command", CommandAsString(request.command)},
-                        {"status",  "ok"},
-                        {"session", client->GetSessionUuid()}}.dump() + "\n");
+                         {"command", CommandAsString(request.command)},
+                         {"status",  "ok"},
+                         {"session", client->GetSessionUuid()}}.dump());
     return response;
   }
   client->DoWrite(Json{{"id",      request.id},
-                      {"command", CommandAsString(request.command)},
-                      {"status",  "failed"},
-                      {"message", response.AsString()}}.dump() + "\n");
+                       {"command", CommandAsString(request.command)},
+                       {"status",  "failed"},
+                       {"message", response.AsString()}}.dump());
   return response;
 }
 
@@ -73,15 +73,15 @@ Response OnRegister(const request::RequestRegister &request,
   auto response = client->InsertUser(request.login, request.password);
   if (response.status == kOk) {
     client->DoWrite(Json{{"id",      request.id},
-                        {"command", CommandAsString(request.command)},
-                        {"status",  "ok"},
-                        {"message", "Now you can log in"}}.dump() + "\n");
+                         {"command", CommandAsString(request.command)},
+                         {"status",  "ok"},
+                         {"message", "Now you can log in"}}.dump());
     return response;
   }
   client->DoWrite(Json{{"id",      request.id},
-                      {"command", CommandAsString(request.command)},
-                      {"status",  "failed"},
-                      {"message", response.AsString()}}.dump() + "\n");
+                       {"command", CommandAsString(request.command)},
+                       {"status",  "failed"},
+                       {"message", response.AsString()}}.dump());
   return response;
 }
 
@@ -98,15 +98,15 @@ Response OnSendMessage(const request::RequestSendMessage &request,
   if (response.status == kOk) {
     int client_id = SendMessageToAllMembers(client, request.body);
     client->DoWrite(Json{{"id",        request.id},
-                        {"command",   "message_reply"},
-                        {"status",    "ok"},
-                        {"client_id", client_id}}.dump() + "\n");
+                         {"command",   "message_reply"},
+                         {"status",    "ok"},
+                         {"client_id", client_id}}.dump());
     return response;
   }
   client->DoWrite(Json{{"id",      request.id},
-                      {"command", "message_reply"},
-                      {"status",  "failed"},
-                      {"message", response.AsString()}}.dump() + "\n");
+                       {"command", "message_reply"},
+                       {"status",  "failed"},
+                       {"message", response.AsString()}}.dump());
   return response;
 }
 
@@ -126,15 +126,15 @@ OnSendMessageFromServer(const request::RequestSendMessageFromServer &request,
     int client_id = SendMessageToAllMembers(client, request.body,
                                             request.sender_login);
     client->DoWrite(Json{{"id",        request.id},
-                        {"command",   "message_reply"},
-                        {"status",    "ok"},
-                        {"client_id", client_id}}.dump() + "\n");
+                         {"command",   "message_reply"},
+                         {"status",    "ok"},
+                         {"client_id", client_id}}.dump());
     return response;
   }
   client->DoWrite(Json{{"id",      request.id},
-                      {"command", "message_reply"},
-                      {"status",  "failed"},
-                      {"message", response.AsString()}}.dump() + "\n");
+                       {"command", "message_reply"},
+                       {"status",  "failed"},
+                       {"message", response.AsString()}}.dump());
   return response;
 }
 
@@ -144,14 +144,14 @@ Response OnLogOut(const request::RequestLogOut &request,
   if (request.session_uuid != client->GetSessionUuid()) {
     Response response = {kStateMismatch};
     client->DoWrite(Json{{"id",      request.id},
-                        {"command", "logout_reply"},
-                        {"status",  "failed"},
-                        {"message", response.AsString()}}.dump() + "\n");
+                         {"command", "logout_reply"},
+                         {"status",  "failed"},
+                         {"message", response.AsString()}}.dump());
     return response;
   }
   client->DoWrite(Json{{"id",      request.id},
-                      {"command", "logout_reply"},
-                      {"status",  "ok"}}.dump() + "\n");
+                       {"command", "logout_reply"},
+                       {"status",  "ok"}}.dump());
   client->Stop();
   return {kOk};
 }
@@ -162,14 +162,14 @@ Response OnPing(const request::RequestPing &request,
   if (request.session_uuid != client->GetSessionUuid()) {
     Response response = {kStateMismatch};
     client->DoWrite(Json{{"id",      request.id},
-                        {"command", "ping_reply"},
-                        {"status",  "failed"},
-                        {"message", response.AsString()}}.dump() + "\n");
+                         {"command", "ping_reply"},
+                         {"status",  "failed"},
+                         {"message", response.AsString()}}.dump());
     return response;
   }
   client->DoWrite(Json{{"id",      request.id},
-                      {"command", "ping_reply"},
-                      {"status",  "ok"}}.dump() + "\n");
+                       {"command", "ping_reply"},
+                       {"status",  "ok"}}.dump());
   return {kOk};
 }
 
@@ -183,13 +183,14 @@ Response WriteBadRequest(const server::Server::ClientPtr client,
   }
   resp.push_back({"command", request::CommandAsString(
       command.value_or(request::kNoSuchCommand))});
-  client->DoWrite(resp.dump() + "\n");
+  client->DoWrite(resp.dump());
   return response;
 }
 
 } // namespace
 
-Response ManageMessage(const Json &data, const server::Server::ClientPtr client) {
+Response
+ManageMessage(const Json &data, const server::Server::ClientPtr client) {
   auto request_part = ParseRequest(data);
   if (!request_part) {
     return WriteBadRequest(client);

@@ -13,7 +13,7 @@ class Client {
 public:
   Client();
 
-  void Connect(boost::asio::ip::tcp::endpoint);
+  void Connect(const boost::asio::ip::tcp::endpoint &);
 
   void Run();
 
@@ -21,21 +21,21 @@ public:
   public:
     Talker();
 
-    void Connect(const boost::asio::ip::tcp::endpoint&);
+    void Connect(const boost::asio::ip::tcp::endpoint &);
 
     void TryDoRequest();
 
-    [[nodiscard]] std::string GetLogin() const;
-
     void TryRead();
-
-    [[nodiscard]] bool IsConnected() const;
 
     void Disconnect();
 
     void DoPing();
 
-    bool IsLogedIn() const;
+    [[nodiscard]] std::string GetLogin() const;
+
+    [[nodiscard]] bool IsConnected() const;
+
+    [[nodiscard]] bool IsLogedIn() const;
 
   private:
     bool ParseResponse();

@@ -56,7 +56,7 @@ Request MakeLoginRequest(const Command &command, int id) {
   Request request = {(Json{{"id",       id},
                            {"command",  CommandAsString(command)},
                            {"login",    login},
-                           {"password", password}}.dump()) + "\n"};
+                           {"password", password}}.dump())};
   if (command == lib_basics::request::kLogin) {
     request.login = login;
   }
@@ -91,18 +91,18 @@ MakeMessageRequest(int id, const std::optional<std::string> &session_uuid,
                     {"command",      "message"},
                     {"body",         message},
                     {"session",      *session_uuid},
-                    {"sender_login", *login}}.dump()) + "\n"};
+                    {"sender_login", *login}}.dump())};
     }
   }
   return {(Json{{"id",      id},
                 {"command", "message"},
                 {"body",    message},
-                {"session", *session_uuid}}.dump()) + "\n"};
+                {"session", *session_uuid}}.dump())};
 }
 
 Request MakeHelloRequest(int id) {
   return {(Json{{"id",      id},
-                {"command", "HELLO"}}.dump()) + "\n"};
+                {"command", "HELLO"}}.dump())};
 }
 
 void ParseMessage(const Json &answer) {
@@ -193,7 +193,7 @@ Request MakePingRequest(const std::string &command, int id,
   }
   return {(Json{{"id",      id},
                 {"command", command},
-                {"session", *session_uuid}}.dump()) + "\n"};
+                {"session", *session_uuid}}.dump())};
 }
 
 Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
