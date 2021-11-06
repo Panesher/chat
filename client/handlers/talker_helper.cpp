@@ -28,7 +28,7 @@ Request WriteCommandList() {
          "'logout' - log out. No need to other fields\n"
          "'message' - send message to other users. Need message, optional"
          " sender login\n"
-         "'ping' - ping server. No need to other fields\n"
+         "'ping' - ping server (don't print answer). No need to other fields\n"
          "'stop' - stop client. No need to other fields\n"
          "'help' - list of commands. No need to other fields" << std::endl;
   return {};
@@ -135,7 +135,7 @@ std::optional<std::string> MakeStringFromKeys(const Json &answer) {
       out += "  " + key + ": '" + std::to_string(*value) + "'\n";
     }
   }
-  return "Response from server:\n" + out;
+  return "Response:\n" + out;
 }
 
 bool IsLogout(const Json &answer) {
