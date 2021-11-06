@@ -53,11 +53,11 @@ Response OnAuthorization(const request::RequestAuthorization &request,
   std::cout << "Authorization" << std::endl;
   auto response = client->LogIn(request.login, request.password);
   if (response.status == kOk) {
-    client->DoWriteAllUnreadedMesseges();
     client->DoWrite(Json{{"id",      request.id},
                          {"command", CommandAsString(request.command)},
                          {"status",  "ok"},
                          {"session", client->GetSessionUuid()}}.dump());
+    client->DoWriteAllUnreadedMesseges();
     return response;
   }
   client->DoWrite(Json{{"id",      request.id},

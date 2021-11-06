@@ -18,7 +18,7 @@ const std::string kBadRequestAsString = "bad request";
 const std::vector<std::string> kKeysForParsingStrings = {"command", "status",
                                                          "message", "session"};
 const std::vector<std::string> kKeysForParsingInts = {"id", "client_id"};
-const size_t min_login_length = 4;
+const size_t min_password_length = 4;
 
 Request WriteCommandList() {
   std::cout
@@ -36,20 +36,16 @@ Request WriteCommandList() {
 
 Request MakeLoginRequest(const Command &command, int id) {
   std::string login, password;
+  std::cout << "Write login" << std::endl;
+  std::cin >> login;
   int counter_bad_requests = 0;
-  while ((login.size() < min_login_length) && ((++counter_bad_requests) < 5)) {
-    std::cout << "Write login at least " << min_login_length << " symbols"
-              << std::endl;
-    std::cin >> login;
-  }
-  while ((password.size() < min_login_length) &&
+  while ((password.size() < min_password_length) &&
          ((++counter_bad_requests) < 5)) {
-    std::cout << "Write password at least " << min_login_length << " symbols"
+    std::cout << "Write password at least " << min_password_length << " symbols"
               << std::endl;
     std::cin >> password;
   }
-  if ((login.size() < min_login_length) ||
-      (password.size() < min_login_length)) {
+  if (password.size() < min_password_length) {
     std::cout << "To many bad requests" << std::endl;
     return {};
   }
