@@ -17,7 +17,14 @@ int main() {
                                       port);
     client::Client client;
     client.Connect(ep);
-    client.Run();
+    std::cout << "Do you want responses been printed? (y/n)" << std::endl;
+    char ans;
+    std::cin >> ans;
+    if (ans == 'y') {
+      client.Run();
+    } else {
+      client.Run(false);
+    }
   } catch (const boost::system::system_error &ex) {
     std::cout << "Ip address can't be parsed" << std::endl;
   }

@@ -21,6 +21,6 @@ Request MakePingRequest(const std::string &command, int id,
 Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
                     const std::optional<std::string> &login);
 
-Response ParseResponse(const std::string &response);
+Response ParseResponse(const std::string &response, bool is_print = true);
 
 } // namespace talker_helper

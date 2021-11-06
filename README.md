@@ -9,9 +9,10 @@ EN below
 - client_starter - запуск клиента.
 
 Сначала запускается сервер, больше с ним ничего делать не надо.
-Клиент - выводит всю необходимую информацию в консоль.
-Для начала нужно подключиться к серверу: 'lh' для локалхоста или ввести ip хоста.
-Доступные команды:
+<br>Клиент - выводит всю необходимую информацию в консоль.
+<br>Для начала нужно подключиться к серверу: 'lh' для локалхоста или ввести ip хоста. Потом решить выводить ответы
+ сервера или нет (ответить на вопрос поставленный консолью y/n).
+<br>Доступные команды:
 - HELLO - отсылает привет серверу.
 - register - регистрация на сервере.
 - login - вход.
@@ -34,10 +35,11 @@ Targets:
 - server_starter - starting the server.
 - client_starter - client launch.
 
-Firstly, you should run the server, nothing else needs to be done with it.
-Client - write in output all the necessary information to the console.
-First at all, you need to connect to the server: 'lh' for the localhost or enter the ip of the host.
-Available commands:
+<br>Firstly, you should run the server, nothing else needs to be done with it.
+<br>Client - write in output all the necessary information to the console.
+<br>First at all, you need to connect to the server: 'lh' for the localhost or enter the ip of the host. After that you 
+should consider if you want to print responses (y/n answer for simple question).
+<br>Available commands:
 - HELLO - sends HELLO to the server.
 - register - registration on the server.
 - login - login.

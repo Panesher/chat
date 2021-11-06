@@ -16,7 +16,8 @@ const int kPingSleepMS = 2'000;
 
 Client::Client() : talker_() {}
 
-void Client::Run() try {
+void Client::Run(bool is_response_print) try {
+  talker_.is_response_print_ = is_response_print;
   if (!talker_.IsConnected()) {
     std::cout << "Connect to server before you do requests" << std::endl;
     return;
@@ -162,7 +163,8 @@ bool Client::Talker::ParseResponse() {
   if (message_serv.empty()) {
     return false;
   }
-  auto response = talker_helper::ParseResponse(message_serv);
+  auto response = talker_helper::ParseResponse(message_serv,
+                                               is_response_print_);
   if (response.session_uuid) {
     session_uuid_ = response.session_uuid;
     login_ = possible_login_;

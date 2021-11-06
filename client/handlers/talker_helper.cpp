@@ -164,7 +164,7 @@ bool IsGoodPing(const Json &answer) {
   return false;
 }
 
-Response ParseCommand(const Json &answer) {
+Response ParseCommand(const Json &answer, bool is_print) {
   Response response;
   if (IsGoodPing(answer)) {
     response.is_message = false;
@@ -172,7 +172,9 @@ Response ParseCommand(const Json &answer) {
   }
   if (auto out = MakeStringFromKeys(answer)) {
     response.is_message = false;
-    std::cout << *out;
+    if (is_print) {
+      std::cout << *out;
+    }
   }
   if (auto session_uuid = parcer_helper::ParseString(answer, "session")) {
     // successfully login if session returned
@@ -225,13 +227,13 @@ Request MakeRequest(int id, const std::optional<std::string> &session_uuid,
   return {};
 }
 
-Response ParseResponse(const std::string &response) {
+Response ParseResponse(const std::string &response, bool is_print) {
   Json answer;
   try {
     answer = Json::parse(response);
   } catch (const nlohmann::detail::parse_error &ex) {}
   ParseMessage(answer);
-  return ParseCommand(answer);
+  return ParseCommand(answer, is_print);
 }
 
 } // namespace talker_helper

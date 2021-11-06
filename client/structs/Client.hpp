@@ -15,10 +15,12 @@ public:
 
   void Connect(const boost::asio::ip::tcp::endpoint &);
 
-  void Run();
+  void Run(bool is_response_print = true);
 
   class Talker {
   public:
+    bool is_response_print_ = true;
+
     Talker();
 
     void Connect(const boost::asio::ip::tcp::endpoint &);
