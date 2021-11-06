@@ -82,6 +82,9 @@ bool Client::Talker::IsLogedIn() const {
 
 void Client::Talker::Disconnect() {
   connected_ = false;
+  login_ = std::nullopt;
+  possible_login_ = std::nullopt;
+  session_uuid_ = std::nullopt;
   socket_.close();
 }
 
