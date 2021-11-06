@@ -41,7 +41,11 @@ void Client::Run() try {
     std::cout
         << "Connection dropped. Last request hadn't sent. Service stopped."
         << std::endl;
+    return;
   }
+  std::cout << "Service dropped." << std::endl;
+} catch (...) {
+  std::cout << "Service dropped." << std::endl;
 }
 
 void Client::RunPing() try {
@@ -62,7 +66,7 @@ void Client::RunPing() try {
       return;
     }
   }
-} catch (const boost::system::system_error &ex) {}
+} catch (...) {}
 
 void Client::Talker::DoPing() {
   if (!connected_) {
@@ -74,9 +78,8 @@ void Client::Talker::DoPing() {
 
   auto request = talker_helper::MakePingRequest("ping", id_transaction_,
                                                 session_uuid_);
-  if (request.message && connected_) {
+  if (request.message) {
     DoWrite(*request.message);
-    return;
   }
 }
 
@@ -125,7 +128,7 @@ void Client::Talker::TryDoRequest() {
   if (request.login) {
     possible_login_ = request.login;
   }
-  if (request.message && connected_) {
+  if (request.message) {
     DoWrite(*request.message);
     return;
   }
@@ -178,7 +181,7 @@ bool Client::Talker::ParseResponse() {
 }
 
 void Client::Talker::DoWrite(const std::string &msg) {
-  if (msg.empty()) {
+  if (msg.empty() || !connected_) {
     return;
   }
   mutex_.lock();
