@@ -187,7 +187,7 @@ response::Response Server::ClientTalker::LogIn(const std::string &login,
   return {response::kOk};
 }
 
-void Server::ClientTalker::OnWrite(const ErrorCode &error, size_t bytes_count) {
+void Server::ClientTalker:: (const ErrorCode &error, size_t bytes_count) {
   DoRead();
 }
 
